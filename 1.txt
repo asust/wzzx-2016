@@ -1,0 +1,1320 @@
+ #include <stdio.h>
+main(t,_,a)char *a;{return!0<t?t<3?main(-79,-13,a+main(-87,1-_,
+main(-86,0,a+1)+a)):1,t<_?main(t+1,_,a):3,main(-94,-27+t,a)&&t==2?_<13?
+main(2,_+1,"%s %d %d\n"):9:16:t<0?t<-72?main(_,t,
+"@n'+,#'/*{}w+/w#cdnr/+,{}r/*de}+,/*{*+,/w{%+,/w#q#n+,/#{l+,/n{n+,/+#n+,/#\
+;#q#n+,/+k#;*+,/'r :'d*'3,}{w+K w'K:'+}e#';dq#'l \
+q#'+d'K#!/+k#;q#'r}eKK#}w'r}eKK{nl]'/#;#q#n'){)#}w'){){nl]'/+#n';d}rw' i;# \
+){nl]!/n{n#'; r{#w'r nc{nl]'/#{l,+'K {rw' iK{;[{nl]'/w#q#n'wk nw' \
+iwk{KK{nl]!/w{%'l##w#' i; :{nl]'/*{q#'ld;r'}{nlwb!/*de}'c \
+;;{nl'-{}rw]'/+,}##'*}#nc,',#nw]'/+kd'+e}+;#'rdq#w! nr'/ ') }+}{rl#'{n' ')# \
+}'+}##(!!/")
+:t<-50?_==*a?putchar(31[a]):main(-65,_,a+1):main((*a=='/')+t,_,a+1)
+:0<t?main(2,2,"%s"):*a=='/'||main(0,main(-61,*a,
+"!ek;dc i@bK'(q)-[w]*%n+r3#l,{}:\nuwloca-O;m .vpbks,fxntdCeghiry"),a+1);}
+
+
+
+/*
+
+On the first day of Christmas my true love gave to me
+a partridge in a pear tree.
+On the second day of Christmas my true love gave to me
+two turtle doves
+and a partridge in a pear tree.
+On the third day of Christmas my true love gave to me
+three french hens, two turtle doves
+and a partridge in a pear tree.
+On the fourth day of Christmas my true love gave to me
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the fifth day of Christmas my true love gave to me
+five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the sixth day of Christmas my true love gave to me
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the seventh day of Christmas my true love gave to me
+seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the eigth day of Christmas my true love gave to me
+eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the ninth day of Christmas my true love gave to me
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the tenth day of Christmas my true love gave to me
+ten lords a-leaping,
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the eleventh day of Christmas my true love gave to me
+eleven pipers piping, ten lords a-leaping,
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+On the twelfth day of Christmas my true love gave to me
+twelve drummers drumming, eleven pipers piping, ten lords a-leaping,
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+*/
+struct Triple//定义一个三元组，用来存储稀疏矩阵的x,y,坐标值
+{
+    int _row;
+    int _col;
+    T _value;
+};
+#include<vector>
+ 
+template<class T>
+struct Triple//定义一个三元组，用来存储稀疏矩阵的x,y,坐标值
+{
+    int _row;
+    int _col;
+    T _value;
+ 
+    Triple(int row, int col, int value)
+        :_row(row)
+        , _col(col)
+        , _value(value)
+    {}
+};
+ 
+ 
+ 
+template<class T>
+class SparseMatrix
+{
+public:
+    SparseMatrix(T* a, int m, int n, const T& invalid)
+         
+    {
+        for (int i = 0; i < m; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (invalid != a[i*n+j])
+                {
+                         //将每一个有效数据（三元组）存在顺序表vector中
+                    Triple <T> tmp(i, j, a[i*n + j]);
+                     
+                    _a.push_back(tmp);                    
+                }
+                 
+            }
+        }    
+    }
+ 
+ 
+    //用坐标形式打印稀疏矩阵
+    void Display(int m, int n, const T& invalid)
+    {
+        cout << "用坐标形式打印稀疏矩阵" << endl;
+        cout <<"{" <<"x," << "  " << "y," << "  " << "value" <<"}" <<endl;
+        for (int k = 0; k < _a.size(); k++)
+        {
+   
+          cout << "{" << _a[k]._row << ",  " << 
+_a[k]._col << ",  " << _a[k]._value << "  " << 
+"}" << endl;
+        }                                
+    }
+ 
+    //用矩阵形式打印稀疏矩阵
+    void DisplayMatrix(int m, int n, const T& invalid)
+    {        
+        cout << "用矩阵形式打印稀疏矩阵" << endl;
+        int k = 0;
+        for (int i = 0; i < m; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {        
+                 
+                if (k<_a.size()&&_a[k]._row == i && _a[k]._col == j)
+                {
+                    cout << _a[k]._value << "  ";
+                    k++;
+                }
+                else
+                {
+                    cout << invalid << "  ";
+                }                                
+            }
+            cout << endl;
+        }
+    }
+     
+    SparseMatrix<T> Transport(T* a, int m, int n, const T& invalid);
+ 
+protected:
+    vector <Triple <T>> _a;
+     
+};
+ 
+ 
+ 
+void Test()
+{
+ 
+    int a[6][5] = {
+                    { 1, 0, 3, 0, 5 },
+                    { 0, 0, 0, 0, 0 },
+                    { 0, 0, 0, 0, 0 },
+                    { 2, 0, 4, 0, 6 },
+                    { 0, 0, 0, 0, 0 },
+                    { 0, 0, 0, 0, 0 },
+                  }; 
+ 
+    int m = 6;
+    int n = 5;
+    SparseMatrix<int> sm((int*)a, m, n, 0);
+    sm.Display( m, n, 0);
+    sm.DisplayMatrix( m, n, 0);
+    SparseMatrix<int> sm1((int*)a, m, n, 0);
+    sm1 = sm.Transport((int*)a, m, n, 0);
+ 
+     
+    sm1.Display( n, m, 0);
+    sm1.DisplayMatrix(n, m, 0);
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+template<class T>
+SparseMatrix<T> SparseMatrix<T>::Transport(T* a, int m, int n, const T& invalid)
+{
+    cout << "矩阵转置：" << endl;
+    SparseMatrix<T> ret;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < _a.size(); j++)
+        {
+            if (_a[j]._col == i)
+            {
+                Triple<T> tri(_a[j]._col, _a[j]._row, _a[j]._value);
+                ret._a.push_back(tri);
+            }
+        }
+    }
+    return ret;
+}
+template<class T>
+SparseMatrix<T> SparseMatrix<T>::FastTransport(int m, int n, const T& invalid)
+{
+    SparseMatrix<T> ret;
+    ret._a.resize(_a.size());
+         
+    vector<int> RowCounts;     //转置后每行元素的个数
+    RowCounts.resize(n);
+    RowCounts.assign(n, 0);
+    for (int i = 0; i < _a.size(); i++)
+    {
+        RowCounts[_a[i]._col]++;    //元素相同列的话，列号对应的顺序表加加
+    }
+         
+    vector<int> RowStarts;
+    RowStarts.resize(n);
+    RowStarts.assign(n, 0);
+     
+    //下一行元素的起始位置等于上一行中的元素个数与上一行元素的起始位置之和
+    for (int j = 0; j < n-1; j++) 
+    {
+        RowStarts[j + 1] = RowStarts[j] + RowCounts[j];
+    }
+      
+    //行列数互换
+    for (int k = 0; i < _a.size(); k++)
+    {
+        ret._a[RowStarts[_a[k]._col]]._col = _a[k]._row;
+        ret._a[RowStarts[_a[k]._col]]._row = _a[k]._col;
+        ret._a[RowStarts[_a[k]._col]++]._value = _a[k]._value;
+    }
+    return ret;
+}
+#include<iostream>
+using namespace std;
+template<class T>
+class SymmtrixMatrix
+{
+public:
+    SymmtrixMatrix(T* a, size_t size)
+        :_a(new T[size*(size+1)/2])
+        , _size(size*(size + 1) / 2)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                if (i >= j)
+                {
+                    //将对称矩阵转换为压缩矩阵
+                    _a[i*(i + 1) / 2+j] = a[i*size+j];
+                }
+                 
+            }
+        }
+    }
+//压缩矩阵的访问打印
+    void Print(size_t size)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                int row = i;
+                int col = j;
+                if (row < col)
+                {
+                    swap(row, col);
+                }
+                cout << _a[row*(row + 1)/2 + col] << " ";
+             
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+ 
+private:
+    T* _a;
+    size_t _size;    //即n,对称矩阵为方阵
+};
+ 
+void Test()
+{
+    int a[5][5] = { 
+                    { 0, 1, 2, 3, 4 },
+                    { 1, 0, 1, 2, 3 },
+                    { 2, 1, 0, 1, 2 },
+                    { 3, 2, 1, 0, 1 },
+                    { 4, 3, 2, 1, 0 }, 
+                  };
+ 
+    SymmtrixMatrix<int> sm((int*)a, 5);
+    sm.Print(5);
+     
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+
+#define _CRT_SECURE_NO_WARNINGS 1
+#include<iostream>
+using namespace std;
+ 
+#include<assert.h>
+ 
+//直接实现Stack，也可以用适配器实现栈，或者用库。
+//将Stack基本功能实现如下：
+template<class T>
+ 
+class Stack
+{
+public:
+    Stack()
+        :_array(NULL)
+        , _size(0)
+        , _capacity(0)
+    {}
+ 
+    Stack<T>(const Stack<T>& s)
+        : _array(new T[s._capacity])
+    {
+        swap(_array, s._array);
+        swap(_size, s._size);
+        swap(_capacity, s._capacity);
+    }
+ 
+    Stack<T>& operator=(const Stack<T>& s)
+    {
+        if (&s != this)
+        {
+            swap(_array, s._array);
+            swap(_size, s._size);
+            swap(_capacity, s._capacity);
+        }
+        return *this;
+    }
+ 
+    ~Stack()
+    {
+        if (_array)
+        {
+            delete[] _array;
+            _array = NULL;
+        }
+    }
+ 
+    void _CheckCapacity()
+    {
+        if (_size == 0)
+        {
+            _capacity = 3;
+            _array = new T[_capacity];
+        }
+        if (_size >= _capacity)
+        {
+            _capacity *= 2;
+            T* tmp = new T[_capacity];
+            for (int index = 0; index < _size; index++)
+            {
+                tmp[index] = _array[index];
+            }
+            delete[] _array;
+            _array = tmp;
+        }
+    }
+ 
+    void Push(const T& x)
+    {
+        _CheckCapacity();
+        _array[_size++] = x;
+    }
+ 
+    void Pop()
+    {
+        if (_size == 0)
+        {
+            return;
+        }
+        --_size;
+    }
+ 
+    size_t Size()
+    {
+        return _size;
+    }
+ 
+    bool Empty()
+    {
+        return Size() == 0;
+    }
+ 
+    T& Top()
+    {
+        assert(_size > 0);
+        return _array[_size - 1];
+    }
+ 
+private:
+    T* _array;
+    size_t _size;
+    size_t _capacity;
+};
+ 
+ 
+template<class T>
+class Queue
+{
+public:
+    void InQueue(const T& x)
+    {
+        s1.Push(x);
+    }
+ 
+    void OutQueue()
+    {
+        //栈s2为空，则将栈s1的元素全部倒入s2中，再弹出最上面的那个元素
+        if (s2.Empty())
+        {
+            while (!s1.Empty())
+            {
+                s2.Push(s1.Top());
+                s1.Pop();
+            }
+            s2.Pop();
+        }
+ 
+        //栈s2不为空，直接弹出元素
+        else
+        {
+            s2.Pop();
+        }
+    }
+ 
+     
+    void Print()    //打印队列元素，分四种情况。
+    {
+        if (s1.Empty() && s2.Empty())
+        {
+            cout << "The Queue is Empty!";
+        }
+ 
+        else if (!s1.Empty() && s2.Empty())
+        {
+            while (!s1.Empty())
+            {
+                s2.Push(s1.Top());
+                s1.Pop();
+            }
+ 
+            while (!s2.Empty())
+            {
+                cout << s2.Top() << "  ";
+                s2.Pop();
+            }
+        }
+ 
+        else if (s1.Empty() && !s2.Empty())
+        {
+            while (!s2.Empty())
+            {
+                cout << s2.Top() << "  ";
+                s2.Pop();
+            }
+        }
+ 
+        else
+        {
+            while (!s2.Empty())
+            {
+                cout << s2.Top() << "  ";
+                s2.Pop();
+            }
+ 
+            while (!s1.Empty())
+            {
+                s2.Push(s1.Top());
+                s1.Pop();
+            }
+ 
+            while (!s2.Empty())
+            {
+                cout << s2.Top() << "  ";
+                s2.Pop();
+            }
+        }
+        cout << endl;
+    }
+ 
+private:
+    Stack<T> s1;    //入队
+    Stack<T> s2;    //出队
+};
+ 
+ 
+ 
+//测试两个栈实现一个队列
+void Test1()
+{
+    Queue<int> q1;
+    q1.InQueue(1);
+    q1.InQueue(2);
+    q1.InQueue(3);
+    q1.InQueue(4);
+    /*q1.Print();*/
+ 
+    q1.OutQueue();
+    /*q1.Print();*/
+    q1.InQueue(5);
+    q1.InQueue(6);
+    q1.InQueue(7);
+ 
+    q1.Print();
+}
+ 
+ 
+ 
+int main()
+{
+    Test1();
+    system("pause");
+    return 0;
+}
+ 
+#include <iostream>  
+#include <queue>  
+using namespace std;  
+template<typename T>  
+class CStack  
+{  
+private:  
+    queue<T> q1;  
+    queue<T> q2;  
+    int nCount;  
+      
+  
+public:  
+    void appendTail(const T& data);  
+    T deleteTail();  
+    int GetNum() const;  
+    CStack()  
+    {  
+        nCount = 0;  
+    }  
+};  
+  
+template<typename T>  
+int CStack<T>::GetNum() const  
+{  
+    return nCount;  
+}  
+  
+template<typename T>  
+void CStack<T>::appendTail(const T& data)  
+{  
+    //一直保证q1与q2有一个为空，比如q1如栈 1 2 3 4 ，现在要出栈4，那么把1 2 3 出队列q1让如队列q2，4出栈  
+    //之后，此时如果有加入一个元素，那么最后加到q2中。  
+      
+    if (q1.size()==0 && q2.size() ==0)//如果q1与q2都为空，那么往q1中插入元素  
+    {  
+        q1.push(data);  
+    }  
+    else if (q1.size()>0)//如果q1不为空，那么往q1中插入元素  
+    {  
+        q1.push(data);  
+    }  
+    else if(q2.size()>0)//如果q2不为空，那么往q1中插入元素  
+    {  
+        q2.push(data);  
+    }  
+    ++nCount;  
+}  
+  
+template<typename T>  
+T CStack<T>::deleteTail()  
+{  
+    T ret;  
+    if (q2.size() == 0)  
+    {  
+  
+        while(q1.size() != 1)  
+        {  
+            T& data = q1.front();  
+            q1.pop();  
+            q2.push(data);  
+        }  
+        ret = q1.front();  
+        q1.pop();  
+        cout<<ret<<endl;  
+    }  
+    else  
+    {  
+        while(q2.size() != 1)  
+        {  
+            T& data = q2.front();  
+            q2.pop();  
+            q1.push(data);  
+        }  
+        ret = q2.front();  
+        q2.pop();  
+        cout<<ret<<endl;  
+    }  
+    --nCount;  
+    return ret;  
+}  
+  
+int main()
+{  
+  
+    CStack<int> stack;  
+    stack.appendTail(88);  
+    stack.appendTail(44);  
+    stack.appendTail(99);  
+    cout<<"元素的个数："<<stack.GetNum()<<endl;  
+  
+    cout<<"出栈，后进先出：出99："<<endl;  
+    stack.deleteTail();  
+    cout<<"元素的个数："<<stack.GetNum()<<endl;  
+    stack.appendTail(777);  
+    cout<<"元素的个数："<<stack.GetNum()<<endl;  
+  
+    cout<<"出栈，后进先出：出777："<<endl;  
+    stack.deleteTail();  
+    cout<<"元素的个数："<<stack.GetNum()<<endl;  
+   
+    return 0;  
+} 
+元素的个数：3
+出栈，后进先出：出99：
+99
+元素的个数：2
+元素的个数：3
+出栈，后进先出：出777：
+777
+元素的个数：2
+#include<stack>
+#include<assert.h>
+#define N 10    //该迷宫10*10.
+ 
+struct Pos    //定义一个结构体，该结构体用来表示坐标。
+{
+    int _row;
+    int _col;
+ 
+    Pos(int row,int col)
+        :_row(row)
+        , _col(col)
+    {}
+};
+ 
+ 
+template<class T>
+bool SearchMazePath(int* a, int n, Pos entry, stack<T>& paths)    //寻找迷宫是否有通路。
+{
+    assert(a);
+     
+    paths.push(entry);
+    while (!paths.empty())
+    {
+        Pos cur = paths.top();
+        a[cur._row*n + cur._col] = 2;            
+        if (cur._row == n - 1)
+        {
+            return true;
+        }
+ 
+        //上
+         Pos tmp = cur;
+        --tmp._row;
+        if (a[tmp._row*n + tmp._col] == 0)
+        {
+            paths.push(tmp);
+            continue;
+        }
+         
+        //下
+        tmp = cur;    
+        ++tmp._row;
+        if (a[tmp._row*n + tmp._col] == 0)
+        {
+            paths.push(tmp);
+            continue;
+        }
+         
+        //左
+        tmp = cur;        
+        --tmp._col;
+        if (a[tmp._row*n + tmp._col] == 0)
+        {
+            paths.push(tmp);
+            continue;
+        }
+         
+         //右
+       tmp = cur;
+        ++tmp._col;
+        if (a[tmp._row*n + tmp._col] == 0)
+        {
+            paths.push(tmp);
+            continue;
+        }
+         
+        paths.pop();    //若上下左右都不通，则回溯。
+    }
+     
+    return false;
+}
+ 
+ 
+void GetMaze(int* a, int n)    //读取到迷宫图案
+{
+    assert(a);
+    FILE* fout = fopen("MazeMap.txt", "r");
+    assert(fout);    //若文件打开失败，后续工作则无法完成，因此采用assert防御式编程。
+     
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            while (true)
+            {
+                int men = fgetc(fout);    //读取字符
+                if (men == '0' || men == '1')    //是0或者1则转换成数字到二维矩阵中存储。
+                {
+                    a[i*n + j] = men -'0';
+                    break;    
+                }                
+            }
+        }
+    }       
+}
+ 
+void PrintMaze(int* a, int n)    //将此迷宫打印出来
+{
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n;j++ )
+        {
+            cout << a[i*n + j] << "  ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+ 
+ 
+void Test()
+{
+    int a[N][N] = {};
+    Pos sp(2, 0);    //入口坐标
+     
+    GetMaze((int*) a, N);
+    PrintMaze((int*)a, N);
+    stack<Pos> paths;
+     
+    SearchMazePath((int*)a, N, sp, paths);  
+    //二维数组实际存储是一维数组，将二维数组强制转换为一维数组传参。
+    PrintMaze((int*)a, N);
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+//bug    last line can not swap with n-1
+//http://www.zhihu.com/question/22547591/
+ #include<iostream>
+using namespace std;
+  int ii=0;
+int Find( char x,int size,int zeroIndex)
+{
+    switch (x)
+    {
+    case 's': //上移 就是找到零下面的那个数字的位置 也就是序号增加一行 也就是+4
+        {
+        if ( zeroIndex<size - 4)
+        {
+            return zeroIndex + 4;
+        }
+        }
+        break;
+    case 'x': //下移
+        {
+//        if (zeroIndex<size-4 && zeroIndex>3)
+        if (  zeroIndex>3)
+        {
+            return zeroIndex - 4;
+        }
+        }
+        break;
+    case 'c': 
+        {
+        if ( zeroIndex%4!=0 )
+        {
+            return zeroIndex - 1;
+        }
+        }
+        break;
+    case 'z':  //左移 主要是判断空白是否在右边缘
+        {
+        if (zeroIndex%4!=3)
+        {
+            return zeroIndex + 1;
+        }
+        }
+        break;
+    default:
+        break;
+    }   
+    return -1;
+}
+ 
+ 
+//交换数组中zero和next的位置
+void SwapIndex(int *ary,int zero, int next)
+{
+    if (-1 == next)
+    {
+        return ;
+    }
+    int t = ary[zero];
+    ary[zero] = ary[next];
+    ary[next] = t; 
+}
+ 
+void Update(int *ary, int size,char com)
+{
+    int zeroIndex = 0; //零的序号
+    for (int i = 0.; i< size ; i++)
+    {
+        if (ary[i] == 0)
+        {
+            zeroIndex = i;
+            break;
+        }
+    }
+     
+    int nextIndex = Find(com,size,zeroIndex); //获取跟零相邻(根据com不同 取上下左右)的那个数字的序号
+    SwapIndex(ary,zeroIndex,nextIndex);
+ 
+}
+ 
+void Show(int *ary, int size)
+{  ii++;
+    for (int i  = 0 ; i <size; i++)
+    {
+        if(i % 4 == 0) //假设每行4个数字
+        {
+            cout<<endl<<endl;
+        }
+        if (ary[i]!=0)
+        {
+        cout<<"\t"<<ary[i];
+        }
+        else
+        {
+            cout<<"\t";
+        }
+    }
+    //cout<<endl<<"请输入方向(1234):";
+   cout<<endl<<"  "<<ii<<endl<<"请输入方向(sxzc):";
+}
+ 
+bool ProcessCommand(int *ary, int size,  char com)
+{
+   //    system("cls");
+    Update(ary,size,com); //更新地图
+    Show(ary,size); //显示新的地图
+    return true;
+}
+ 
+ 
+char GetCommand() //假设只返回4个值 代表四个方向
+{
+//int test = 1;
+char  test='s';
+cin>>test;//先测试一下
+return test;
+}
+ 
+ 
+void Process(int *ary, int size)
+{
+   /// int com = 0;
+   char  com='s';
+    while(ProcessCommand(ary,size,com))
+    {
+         com = GetCommand();    
+    }
+ 
+}
+ 
+ 
+int pintu()
+{
+    int ary[16]; //数字0 代表空白
+    for (int i=0;i<16; i++)
+    {
+        ary[i] = i;
+    }
+    Process(ary,16);
+    return 0;
+}
+
+template<class Entry>  
+struct Binary_node  
+{  
+    Entry data;  
+    Binary_node<Entry>* left;  
+    Binary_node<Entry>* right;  
+    Binary_node();  
+    Binary_node(const Entry &x);  
+};  
+
+///////////////////////////////////////
+template<class Entry>  
+class Binary_tree  
+{  
+public:  
+    Binary_tree():root(NULL){};  
+    ~Binary_tree();  
+/*  Binary_tree();*/  
+    bool empty() const;  
+    void preorder(void (*visit)(Entry &));  
+    void inorder(void (*visit)(Entry &));  
+    void postorder(void (*visit)(Entry &));  
+    //Binary_tree大小  
+    int size() const;  
+    int height() const;  
+    void clear();  
+    void insert(const Entry& x);  
+    void reverse();  
+    Binary_tree(const Binary_tree<Entry>&original);  
+    Binary_tree & operator=(const Binary_tree<Entry>&original);  
+    const Binary_node<Entry>* get_root() const;  
+    //一些递归辅助函数  
+private:      
+    int recursive_size(const Binary_node<Entry>*root) const;  
+    int recursive_height(const Binary_node<Entry>*root) const;  
+    void equal(Binary_node<Entry>*&sub_root,const Binary_node<Entry>*orig_node);  
+    void recursive_reverse(Binary_node<Entry> * & sub_root);  
+    void recursive_clear(Binary_node<Entry> * & sub_root);  
+    void recursive_insert(Binary_node<Entry> * & sub_root, const Entry& x);  
+    void recursive_inorder(Binary_node<Entry> * sub_root, void (*visit)(Entry &));  
+    void recursive_preorder(Binary_node<Entry> * sub_root, void (*visit)(Entry &));  
+    void recursive_postorder(Binary_node<Entry> * sub_root, void (*visit)(Entry &));  
+protected:  
+    Binary_node<Entry>* root;  
+ 
+};
+////////////////////////////////////////////  
+
+#ifndef BINARY_TREE_CPP_X  
+#define BINARY_TREE_CPP_X  
+//#include "Binary_tree.h"  
+//结点构造函数  
+template<class Entry>  
+Binary_node<Entry>::Binary_node()  
+{  
+    left = right = NULL;  
+}  
+template<class Entry>  
+Binary_node<Entry>::Binary_node(const Entry &x)  
+{  
+    left = right = NULL;  
+    data = x;  
+}  
+template<class Entry>  
+Binary_tree<Entry>::Binary_tree(const Binary_tree<Entry>&original)  
+{  
+    root = original.get_root();  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_inorder(Binary_node<Entry>*sub_root, void(*visit)(Entry&))  
+{//中序遍历的递归函数  
+    if(sub_root!=NULL)  
+    {  
+        recursive_inorder(sub_root->left, visit);  
+        (*visit)(sub_root->data);  
+        recursive_inorder(sub_root->right, visit);  
+    }  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::inorder(void (*visit)(Entry&))  
+{//中序遍历  
+    recursive_inorder(root, visit);  
+}  
+ 
+template<class Entry>  
+void Binary_tree<Entry>::recursive_postorder(Binary_node<Entry>*sub_root, void (*visit)(Entry&))  
+{//后序遍历的递归函数  
+    if (sub_root!=NULL)  
+    {  
+        recursive_postorder(sub_root->left, visit);  
+        recursive_postorder(sub_root->right, visit);  
+        (*visit)(sub_root->data);  
+    }  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::postorder(void (*visit)(Entry&))  
+{//后序遍历  
+    recursive_postorder(root, visit);  
+}  
+ 
+template<class Entry>  
+void Binary_tree<Entry>::recursive_preorder(Binary_node<Entry>*sub_root, void (*visit)(Entry&))  
+{//先序遍历的递归函数  
+    if (sub_root!=NULL)  
+    {  
+        (*visit)(sub_root->data);  
+        recursive_preorder(sub_root->left, visit);  
+        recursive_preorder(sub_root->right, visit);  
+    }  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::preorder(void (*visit)(Entry&))  
+{//先序遍历  
+    recursive_preorder(root, visit);  
+}  
+ 
+//return tree height, if only one node then return 1  
+template<class Entry>  
+int Binary_tree<Entry>::height() const  
+{  
+    return recursive_height(root);  
+}  
+#define max MAX  
+template<class Comparable>  
+Comparable MAX(const Comparable& a, const Comparable& b)  
+{  
+    return a > b ? a : b;  
+}  
+template<class Entry>  
+int Binary_tree<Entry>::recursive_height(const Binary_node<Entry>*root) const  
+{  
+    if(root == NULL)  
+        return 0;  
+    else  
+        return 1 + max(recursive_height(root->left) , recursive_height(root->right)) ;  
+}  
+#undef max  
+ 
+//return the size of tree  
+template<class Entry>  
+int Binary_tree<Entry>::size() const  
+{  
+    return recursive_size(root);  
+}  
+template<class Entry>  
+int Binary_tree<Entry>::recursive_size(const Binary_node<Entry>*root) const  
+{  
+    if(root == NULL)  
+        return 0;  
+    else  
+        return 1 + recursive_size(root->left) + recursive_size(root->right) ;  
+}  
+//the tree is empty ?  
+template<class Entry>  
+bool Binary_tree<Entry>::empty() const  
+{  
+    return root == NULL;  
+}  
+//insert x to the tree  
+template<class Entry>  
+void Binary_tree<Entry>::insert(const Entry& x)  
+{  
+    recursive_insert(root, x);  
+}  
+//the recursive function of insert,  
+//insert x in the less height side,  
+//if both sides are same height then insert to the left  
+//第一个参数必须使用引用否则插入失败,而其他不涉及数据改动的函数则不需要  
+//引用传参时不会发生值拷贝,如果不加引用,会先在函数的栈空间拷贝一个root,但当函数  
+//结束时这个拷贝就会被销毁,所以会导致插入失败  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_insert(Binary_node<Entry>*&sub_root, const Entry& x)  
+{  
+    if(sub_root == NULL)  
+    {  
+        Binary_node<Entry>* ins_data = new Binary_node<Entry>(x);  
+        sub_root = ins_data;  
+        return;  
+    }  
+    else  
+    {  
+        if(recursive_height(sub_root->left) > recursive_height(sub_root->right))  
+            recursive_insert(sub_root->right, x);  
+        else  
+            recursive_insert(sub_root->left, x);  
+    }  
+}  
+//destuctor  
+template<class Entry>  
+Binary_tree<Entry>::~Binary_tree()  
+{  
+    clear();  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::clear()  
+{  
+    recursive_clear(root);  
+}  
+//recursive function for destroy tree  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_clear(Binary_node<Entry>*&sub_root)  
+{//两个版本都OK  
+#if 0  
+    if(sub_root != NULL)  
+    {  
+        recursive_clear(sub_root->left);  
+        recursive_clear(sub_root->right);  
+        delete sub_root;  
+        sub_root = NULL;  
+    }  
+#else  
+    if(sub_root->left!=NULL)  
+        recursive_clear(sub_root->left);  
+    if(sub_root->right!=NULL)  
+        recursive_clear(sub_root->right);  
+    delete sub_root;  
+    sub_root = NULL;  
+#endif  
+}  
+//get the root  
+template<class Entry>  
+const Binary_node<Entry>* Binary_tree<Entry>::get_root() const  
+{  
+    return root;  
+}  
+//deep copy  
+template<class Entry>  
+Binary_tree<Entry>& Binary_tree<Entry>::operator =(const Binary_tree<Entry>&original)  
+{  
+    equal(root, original.get_root());  
+    return *this;  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::equal(Binary_node<Entry>*&sub_root,const Binary_node<Entry>*orig_node)  
+{  
+    if(empty())  
+        sub_root = new Binary_node<Entry>(orig_node->data);  
+    if(orig_node->left!=NULL)  
+    {  
+        sub_root->left = new Binary_node<Entry>(orig_node->left->data);  
+        equal(root->left, orig_node->left);  
+    }  
+    if(orig_node->right!=NULL)  
+    {  
+        sub_root->right = new Binary_node<Entry>(orig_node->right->data);  
+        equal(root->right, orig_node->right);  
+    }  
+}  
+//reverse the binary tree,  exchange left and right  
+template<class Entry>  
+void Binary_tree<Entry>::reverse()  
+{  
+    recursive_reverse(root);  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_reverse(Binary_node<Entry> * & sub_root)  
+{  
+    if(sub_root!=NULL)  
+    {  
+        Binary_node<Entry>* temp = NULL;  
+        temp = sub_root->left;  
+        sub_root->left = sub_root->right;  
+        sub_root->right = temp;  
+        recursive_reverse(sub_root->left);  
+        recursive_reverse(sub_root->right);  
+    }  
+}  
+#endif  
+
+/////////////////////////////////////////////////
+#include <iostream>  
+// #include "Binary_tree.h"  
+using namespace std;  
+void print( int& x);  
+int main()  
+{  
+    Binary_tree<int> dd;  
+    dd.insert(3);  
+    dd.insert(2);  
+    dd.insert(5);  
+    dd.insert(8);  
+    dd.insert(9);  
+    dd.insert(1);  
+    Binary_tree<int> ww;  
+    ww = dd;  
+    ww.insert(10);  
+    ww.insert(7);  
+    cout<<"preorder:";  
+    dd.preorder(print);  
+    cout<<endl;  
+    cout<<"preorder:";  
+    ww.preorder(print);  
+    cout<<endl;  
+    dd.reverse();  
+    cout<<"preorder:";  
+    dd.preorder(print);  
+    cout<<endl;    
+    //system("pause");  
+    return 0;  
+}  
+void print( int& x)  
+{  
+    cout<<x<<" ";  
+}  
+
+#include <stdio.h>
+#include <string.h>
+/*  比较函数换回 -1 0 1 状态到bubbl 函数 */
+int int_cmp(const void *p1, const void *p2)
+{  
+   if (*(int *)p1 > *(int *)p2)  
+  {    
+     return 1;  
+  }  
+    else if (*(int *)p1 == *(int *)p2)    
+  {      
+   return 0;  
+  }  
+  else  
+  {      
+  return -1;  
+ }
+}
+
+/*   串比较函数 运用库函数并状态返回bubbl函数  */
+int str_cmp(const void *p1, const void *p2)
+{  
+  return strcmp((char *)(*(int *)p1), (char *)(*(int *)p2));
+}
+
+
+/*  交换 函数 */
+void swap(void *p1, void *p2, int size)
+{
+   int i = 0;  
+  for (i = 0; i < size; i++)  
+ {
+    char tmp = *((char *)p1 + i);    
+    *((char *)p1 + i) = *((char *)p2 + i);    
+   *((char *)p2 + i) = tmp;  
+ }
+}
+
+/*健硕的冒泡排序 函数   数组首指针  长度  类型（按类型处理） int 类型   函数指针（按类型调用）*/
+void bubble(void *base, int count, int size, int(*cmp)(const void *, const void *))
+{    
+int i = 0;  
+  int j = 0;  
+ for (i = 0; i < count - 1; i++)  
+  {    
+    for (j = 0; j < count - i - 1; j++)    
+   {        
+    if (cmp((char *)base +size*j,(char *)base+size*(j+1))>0)      
+      {            
+         swap((char *)base + size*j, (char *)base + size*(j + 1), size);  
+         }      
+    }  
+ }
+}
+
+/*  测试 整型数组 */
+int fun1()
+{  
+   int arr[] = { 1, 3, 5, 7, 9, 2, 4, 6, 8, 0 };  
+  int i = 0;  
+ bubble(arr, sizeof(arr) / sizeof(arr[0]), sizeof(int *), int_cmp);  
+ for (i = 0; i < 11; i++)  
+  {      
+  printf("%3d", arr[i]);
+   }  
+ printf("\n");  
+ return 0;
+}
+
+/*  测试 字符串数组 */
+int fun2()
+{  
+ 
+   char *arr[] = { "dddd", "bbbb", "cccc", "aaaa" };  
+  int i = 0;  
+ bubble(arr, sizeof(arr) / sizeof(arr[0]), sizeof(char *), str_cmp);  
+ for (i = 0; i < 4; i++)  
+  {      
+  printf("%s\n", arr[i]);
+   }  
+ printf("\n");  
+ return 0;}
+int main()
+{  
+ fun1();
+ fun2();  
+ return 0;
+}
