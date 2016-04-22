@@ -1,0 +1,170 @@
+//http://10955910.blog.51cto.com/10945910/1764066
+
+#pragma once
+#include<assert.h>
+#include<iostream>
+using namespace std;
+ 
+ 
+enum Type
+{
+ HEAD,
+ VALUE,
+ SUB
+};
+ 
+struct GeneralizedNode//节点包含  类型 值域 以及next指针 字表指针
+{
+ Type _type;
+ GeneralizedNode *next;//指向同级的next
+ union 
+ {
+  int _value;
+  GeneralizedNode *_Sublink;
+   
+ };
+ 
+ GeneralizedNode() :next(NULL), _value(0)
+ {}
+ 
+};
+ 
+class Generalize
+{
+public:
+ Generalize(const char *str)
+ {
+  char *str1 = (char *)str;
+  _head = CreatGeneralize(str1);
+ 
+ }
+ void print()
+ {
+  _print(_head);
+  cout << endl;
+ }
+ size_t size()
+ {
+  return _size(_head);
+ }
+ 
+ size_t depth();
+ 
+private:
+ size_t _depth(GeneralizedNode *tmp)//最大嵌套层数
+ {
+  int count = 0;
+   
+ }
+ 
+ size_t _size(GeneralizedNode *tmp)
+ {
+   GeneralizedNode *cur = tmp;
+   int count = 0;
+   while (cur)
+   {
+    if (cur->_type == VALUE)
+    {
+     ++count;
+    }
+    else if (cur->_type == SUB)
+    {
+     count += _size(cur->_Sublink);
+    }
+    cur = cur->next;
+   }
+   return count;
+  }
+ 
+ 
+ 
+ void _print(GeneralizedNode *tmp)
+ {
+  GeneralizedNode *cur = tmp;
+  while (cur)
+  {
+   if (cur->_type == HEAD)
+    cout << '(';
+   else if (cur->_type==VALUE)
+   {
+    cout << cur->_value;
+    if (cur->next == NULL)
+     cout << ')';
+    else
+    {
+     cout << ',';
+ 
+    }
+   }
+   else
+   {
+    _print(cur->_Sublink);
+    cout << ',';
+   }
+   cur = cur->next;
+  }
+ }
+ 
+ 
+ GeneralizedNode* CreatGeneralize(char *&str)
+ {
+  while (*str)
+  {
+ 
+   if (*str == '(')//开始构成表。
+   {
+    GeneralizedNode *_head = new GeneralizedNode;
+    _head->_type = HEAD;
+    GeneralizedNode *cur = _head;
+ 
+    _head->_type = HEAD;
+    ++str;
+    while (*str)
+    {
+     if (IsValue(*str))//是一个数字
+     {
+      GeneralizedNode *tmp = new GeneralizedNode;
+      tmp->_type = VALUE;
+      tmp->_value = *str;
+      //++str;
+      cur->next = tmp;
+      cur = cur->next;
+      ++str;
+     }
+     else if (*str == '(')
+     {
+       
+      GeneralizedNode* sub = new GeneralizedNode;
+      sub->_type = SUB;
+      sub->_Sublink = CreatGeneralize(str);
+      cur->next = sub;
+      cur = cur->next;
+     }
+     else if (*str == ')')
+     {
+      ++str;
+      return _head;
+     }
+     else
+     {
+      ++str;
+     }
+    }
+    return _head;
+ 
+ 
+ 
+   }
+   return _head;
+  }
+ 
+ }
+ bool IsValue(char p)
+ {
+  if (p >= 'a'&&p <= 'z' || p >= 'A'&&p <= 'Z' || p >= '0'&&p <= '9')
+   return true;
+  return false;
+ }
+private:
+ GeneralizedNode *_head;
+};
