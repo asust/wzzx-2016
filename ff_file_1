@@ -1,0 +1,830 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<assert.h>
+#include<arpa/inet.h>
+#include<sys/socket.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<netinet/in.h>
+#include<sys/epoll.h>
+#include<sys/uio.h>
+#include<sys/stat.h>
+#include<dirent.h>
+#include<signal.h>
+#define     MAXFD   3
+#define		NSIZE	10
+#define     NCLIENT 6
+
+#define  readsize  102400
+
+void send_file(int c,char *name)
+{
+	char buff[128] = {0};
+	if(recv(c,buff,127,0) <= 0)
+	{
+		return;
+	}
+	if(strncmp(buff,"ok",2) != 0)
+	{
+		return ;
+	}
+	struct stat st;
+	if( stat(name,&st) == -1 )
+	{
+		send(c,"H02#1",5,0);
+		return ;
+	}
+
+	int fd = open(name,O_RDONLY);
+	if( fd == -1)
+	{
+		send(c,"H02#2",5,0);
+		return ;
+	}
+
+	send(c,"H02#0",5,0);
+
+	char recvbuff[128] = {0};
+	if( recv(c,recvbuff,127,0) <= 0)
+	{
+		perror("recv H03 error");
+		close(fd);
+		return ;
+	}
+
+	if(strncmp(recvbuff,"H03",3) != 0)
+	{
+		printf("recv H03 data error");
+		close(fd);
+		return;
+	}
+	if( strncmp(recvbuff+4,"0",1) != 0)
+	{
+		printf("client stop recv file\n");
+		close(fd);
+		return ;
+	}
+
+	sprintf(buff,"H0S#%d#",st.st_size);
+	send(c,buff,strlen(buff),0);
+
+	if(recv(c,buff,127,0) <= 0)
+	{
+		printf("client error\n");
+		close(fd);
+		return ;
+	}
+	if(strncmp(buff,"H0S",3) != 0)
+	{
+		printf("client error\n");
+		close(fd);
+		return ;
+	}
+	if(strncmp(buff+4,"U",1) != 0)
+	{
+		printf("client sure error\n");
+		close(fd);
+	}
+
+//	char sendbuff[readsize] = {0};
+//	char readbuff[readsize] = {0};
+
+	fd_set rset;
+	fd_set wset;
+	while ( 1 )
+	{
+		signal(SIGPIPE,SIG_IGN);
+		FD_ZERO(&rset);
+		FD_ZERO(&wset);
+
+		FD_SET(c,&rset);
+		FD_SET(c,&wset);
+		int res = select(c+1,&rset,&wset,NULL,NULL);
+		if(res == -1)
+		{
+			break;
+		}
+		else if(res == 0)
+		{
+			printf("time out\n");
+			continue;
+		}
+		else
+		{
+			if(FD_ISSET(c,&rset))
+			{
+				char buff[128] = {0};
+				if(recv(c,buff,127,0) <= 0)
+				{
+					printf("client over exit\n");
+					break;
+				}
+			}
+			if(FD_ISSET(c,&wset))
+			{
+				if(sendfile(c,fd,NULL,1024*100) <= 0)
+				{
+					break;
+				}
+			}
+		}
+		/*
+		int n = read(fd,readbuff,readsize-20);
+		if( n <= 0 )
+		{
+			send(c,"H04#0#",6,0);
+			break;
+		}
+
+		sprintf(sendbuff,"H04#%d#",n);
+		int headlen = strlen(sendbuff);
+		memcpy(sendbuff+headlen,readbuff,n);
+		send(c,sendbuff,headlen+n,0);
+
+		if( recv(c,recvbuff,127,0) <= 0)
+		{
+			close(fd);
+			break;
+		}
+
+		if(strncmp(recvbuff+4,"0",1) != 0)
+		{
+			close(fd);
+			break;
+		}
+		memset(readbuff,0,readsize);
+		memset(sendbuff,0,readsize);
+		*/
+	}
+	
+	close(fd);
+}
+
+
+void Fall_back(char *name)
+{
+	int n = strlen(name);
+	char *tmp = name + n -1;
+	while(*tmp != '/')
+	{
+		--tmp;
+	}
+	*tmp = 0;
+}
+
+void search_file(char *path,int c,int flg)
+{
+	printf("path:%s\n",path);
+	struct stat st;
+	struct dirent*ent = NULL;
+	DIR *ptr;
+	if((ptr = opendir(path)) == NULL && flg == 0)
+	{
+		send(c,"file",4,0);
+		send_file(c,path);
+		return;
+	}
+	if(flg == 0)
+	{
+		send(c,"floder",6,0);
+	}
+	char buff[256] = {0};
+	char name[256] = {0};
+	char sendbuff[128] = {0};
+	char recvbuff[128] = {0};
+	//getcwd(buff,sizeof(buff));
+	//strcat(buff,"/");
+	//strcat(buff,path);
+	//strcpy(buff,path);
+	if(flg == 0)
+	{
+	//	getcwd(buff,sizeof(buff));
+	//	strcat(buff,"/");
+		strcpy(buff,path);
+		if(recv(c,recvbuff,127,0)<= 0)
+		{
+			send(c,"error",5,0);
+			return;
+		}
+		if(strncmp(recvbuff,"ok",2) != 0)
+		{
+			send(c,"error",5,0);
+			return;
+		}
+	}
+	else
+	{
+		strcpy(buff,path);
+	}
+	while((ent = readdir(ptr)) != NULL)
+	{
+		if(ent->d_reclen == 16 || ent->d_reclen == 20 || ent->d_reclen == 24 || ent->d_reclen == 28)
+		{
+		//	printf("name-%s\n",ent->d_name);
+			if(strncmp(ent->d_name,".",1) == 0)
+			{
+				continue;
+			}
+	//		printf("name-%s\n",ent->d_name);
+			if(ent->d_type == 8)
+			{
+				strcpy(name,buff);
+				strcat(name,"/");
+				strcat(name,ent->d_name);
+		//		sprintf(sendbuff,"newfile%s",ent->d_name);
+		//		printf("name-%s\n",ent->d_name);
+				send(c,ent->d_name,strlen(ent->d_name),0);
+				send_file(c,name);
+				strcpy(name,buff);
+				//普通文件
+			}
+			else if(ent->d_type == 4)
+			{
+				//目录文件
+	//			printf("floder-name:%s\n",ent->d_name);
+				strcat(buff,"/");
+				strcat(buff,ent->d_name);
+				char newbuff[128] = {0};
+				strcpy(newbuff,"newfloder#");
+				strcat(newbuff,ent->d_name);
+				send(c,newbuff,strlen(newbuff),0);
+				flg++;
+				if(recv(c,newbuff,127,0) <= 0)
+				{
+					return ;
+				}
+				if(strncmp(newbuff,"ok",2) != 0)
+				{
+					printf("recv ok error\n");
+					return ;
+				}
+				memset(newbuff,0,128);
+				search_file(buff,c,flg);
+				send(c,"back",4,0);
+				if(recv(c,newbuff,127,0) <= 0)
+				{
+					return ;
+				}
+				if(strncmp(newbuff,"ok",2) != 0)
+				{
+					printf("recv back ok error\n");
+					return ;
+				}
+				Fall_back(buff);
+				flg--;
+			}
+		}
+	}
+	if( flg == 0 )
+	{
+		send(c,"empty",5,0);
+	}
+}
+
+
+int get_digit(int size)
+{
+	int n = 0;
+	while(size != 0)
+	{
+		size /= 10;
+		n++;
+	}
+	return n;
+}
+
+
+
+void get_file(int c,char *name)
+{
+	if(name == NULL)
+	{
+		send(c,"U01#1",5,0);
+		return ;
+	}
+	struct stat st;
+	if( stat(name,&st) != -1 )
+	{
+		send(c,"U01#2",5,0);
+		return ;
+	}
+	send(c,"U01#0",5,0);
+	int fd = open(name,O_CREAT|O_RDWR|O_TRUNC, S_IWUSR|S_IRUSR);
+	assert(fd != -1);
+	char recvbuff[readsize] = {0};
+	char strsize[128] = {0};
+	char buff[128] = {0};
+	int size;
+	if(recv(c,buff,127,0) <= 0)
+	{
+		close(fd);
+		return;
+	}
+	if(strncmp(buff,"U02",3) != 0)
+	{
+		printf("U02 error\n");
+		close(fd);
+		return;
+	}
+	if(strncmp(buff+4,"0",1) != 0)
+	{
+		printf("U02 error\n");
+		close(fd);
+		return;
+	}
+	send(c,"U02#ok",6,0);
+	while( 1 )
+	{
+		int n;
+		if((n = recv(c,recvbuff,readsize,0)) <= 0)
+		{
+			printf("client error\n");
+			break;
+		}
+		//printf("recive%d\n",strlen(recvbuff));
+		if(strncmp(recvbuff,"U03",3) != 0)
+		{
+			printf("U03 error\n");
+			send(c,"U04#1",5,0);
+			break;
+		}
+		if(strncmp(recvbuff+4,"0",1) == 0)
+		{
+			send(c,"U05#0",5,0);
+		    printf("recv file finish\n");
+			break;
+		}
+
+		char *s = recvbuff;
+		s = s+4;
+		int i = 0;
+		while(*s != '#')
+	    {
+			strsize[i] = *s;
+	//		printf("strsize[%d] = %c\n",i,*s);
+			s++;
+			i++;
+		}
+		strsize[i] = 0;
+		s++;
+		sscanf(strsize,"%d",&size);
+	//    size = atoi(strsize);
+		if(size == 0)
+		{
+			printf("recv file finish\n");
+			break;
+		}
+
+		i = n - get_digit(size)-5;
+		write(fd,s,i);
+		i = get_digit(size)+5+size;
+		while(n < i)
+		{
+			i -= n;
+			memset(recvbuff,0,readsize);
+			n = recv(c,recvbuff,i,0);
+			write(fd,recvbuff,n);
+		}
+		
+		memset(recvbuff,0,readsize);
+		send(c,"U04#0",5,0);
+	}
+	close(fd);
+}
+
+void ergodic(char *buff,char *path)
+{
+
+	struct dirent *ent = NULL;
+	DIR *ptr;
+	ptr = opendir(path);
+
+
+	while((ent=readdir(ptr)) != NULL)
+	{
+		if(ent->d_reclen == 16 || ent->d_reclen == 20 || ent->d_reclen == 24 || ent->d_reclen == 28)
+		{
+			if(strncmp(ent->d_name,".",1) == 0)
+			{
+				continue;
+			}
+			if(ent->d_type == 4)
+			{
+				strcat(buff,"#f");
+				strcat(buff,ent->d_name);
+				strcat(buff," ");
+			}
+			else
+			{
+				strcat(buff,"#e");
+				strcat(buff,ent->d_name);
+				strcat(buff," ");
+			}
+		}
+	}
+	closedir(ptr);
+	ptr = NULL;
+}
+
+
+void choose(char *buff,char *sbuff,int c)
+{
+	char readbuff[256] = {0};
+	char *s = strtok(buff," ");
+	if(strcmp(buff,"ls") == 0)
+	{
+		ergodic(readbuff,sbuff);
+		send(c,readbuff,255,0);
+	}	
+	else if(strncmp(buff,"rm",2) == 0)
+	{
+		s = strtok(NULL," ");
+		if(remove(s) == -1)
+		{
+			strcpy(readbuff,"rm failed!");
+			send(c,readbuff,strlen(readbuff),0);
+			return ;
+		}
+		strcpy(readbuff,"rm success!");
+		send(c,readbuff,255,0);
+	}
+	else if(strncmp(buff,"cd",2) == 0)
+	{
+		s = strtok(NULL," ");
+		if(strcmp(s,"..") == 0)
+		{
+			if(chdir("..") == -1)
+			{
+				return ;
+			}
+			memset(sbuff,0,255);
+			getcwd(sbuff,255);
+			send(c,sbuff,strlen(sbuff),0);
+		}
+		else
+		{
+			chdir(s);
+			getcwd(sbuff,255);
+			send(c,sbuff,strlen(sbuff),0);
+		}
+
+	}	
+	else if(strncmp(buff,"touch",5) == 0)
+	{
+		s = strtok(NULL," ");
+		int fd = open(s,O_CREAT|O_RDWR|O_TRUNC, S_IWUSR|S_IRUSR);
+		if(fd == -1)
+		{
+			strcpy(readbuff,"Create file error");
+			send(c,readbuff,strlen(readbuff),0);
+		}
+		strcpy(readbuff,"Create file success");
+		send(c,readbuff,strlen(readbuff),0);
+		close(fd);
+	}
+	else if(strncmp(buff,"mkdir",5) == 0)
+	{
+		s = strtok(NULL," ");
+		getcwd(readbuff,sizeof(readbuff));
+		strcat(readbuff,"/");
+		strcat(readbuff,s);
+		if(mkdir(readbuff,S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH) == -1)
+		{
+			send(c,"mkdir failed",12,0);
+		}
+		send(c,"mkdir success!",14,0);
+	}
+}
+
+
+int recv_fd(int sock_fd);
+void child_run(int fd)
+{
+	static char recvbuff[256] = {0};
+	getcwd(recvbuff,sizeof(recvbuff));
+	while( 1 )
+	{
+		int c = recv_fd(fd);
+
+		while( 1 )
+		{
+			char rbuff[256] = {};
+			char buff[256]={};
+			int n = recv(c,buff,255,0);
+			if(n <= 0)
+			{
+				break;
+			}
+			if((strncmp(buff,"H",1) != 0) && (strncmp(buff,"U",1) != 0))
+			{
+				choose(buff,recvbuff,c);
+				continue;
+			}
+			else
+			{
+				char *head = strtok(buff,"#");
+				char *name = strtok(NULL,"#");
+
+				if( strncmp(head,"H01",3) == 0)
+				{
+					strcpy(rbuff,recvbuff);
+					strcat(rbuff,"/");
+					strcat(rbuff,name);
+					search_file(rbuff,c,0);
+				}
+
+				if( strncmp(head,"U01",3) == 0)
+				{
+					get_file(c,name);
+				}
+
+			}
+		}
+			close(c);
+			printf("a clicent over\n");
+			write(fd,"free",4);
+	}
+}
+
+void create_process(int pipefd[])
+{
+	int i = 0;
+	for( ; i < MAXFD;i++)
+	{
+		int fd[2];
+		socketpair(AF_UNIX,SOCK_STREAM,0,fd);// Pipe
+		pid_t pid = fork();
+		assert(pid != -1);
+		if( pid == 0 )
+		{
+			close(fd[0]);
+			child_run(fd[1]);
+			exit(0);
+		}
+		close(fd[1]);
+		pipefd[i] = fd[0];
+	}
+}
+
+
+int create_socket()
+{
+	int sockfd = socket(AF_INET,SOCK_STREAM,0);
+	assert(sockfd != -1);
+
+	struct sockaddr_in saddr;
+    memset(&saddr,0,sizeof(saddr));
+	saddr.sin_family = AF_INET;
+	saddr.sin_port = htons(6500);
+	saddr.sin_addr.s_addr = inet_addr("192.168.182.2");
+
+	int res = bind(sockfd,(struct sockaddr*)&saddr,sizeof(saddr));
+	assert(res != -1);
+
+	listen(sockfd,5);
+
+	return sockfd;
+}
+
+
+void epoll_add(int epfd,int fd)
+{
+	struct epoll_event ev;
+	ev.events = EPOLLIN;
+	ev.data.fd = fd;
+	if(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,&ev) == -1)
+	{
+		perror("add epoll error");
+	}
+}
+
+void epoll_del(int epfd,int fd)
+{
+	if(epoll_ctl(epfd,EPOLL_CTL_DEL,fd,NULL) == -1)
+	{
+		perror("del epoll error");
+	}
+}
+
+void send_fd(int sock_fd,int c)
+{
+	struct iovec iov[1];
+	char buff[1];
+	iov[0].iov_base = buff;
+	iov[0].iov_len = 1;
+
+	struct msghdr msg;
+	msg.msg_name = NULL;
+	msg.msg_namelen = 0;
+	msg.msg_iov = iov;
+	msg.msg_iovlen = 1;
+
+	struct cmsghdr cm;
+
+	cm.cmsg_len = CMSG_LEN(sizeof(int));
+	cm.cmsg_level = SOL_SOCKET;
+	cm.cmsg_type = SCM_RIGHTS;
+
+	*(int *)CMSG_DATA(&cm) = c;
+
+	msg.msg_control = &cm;
+	msg.msg_controllen = CMSG_LEN(sizeof(int));
+	msg.msg_flags = 0;
+
+	if(sendmsg(sock_fd,&msg,0) == -1 )
+	{
+		perror("sendmsg error");
+	}
+}
+
+int  recv_fd(int sock_fd)
+{
+	struct iovec iov[1];
+	char buff[1];
+	iov[0].iov_base = buff;
+	iov[0].iov_len = 1;
+
+	struct msghdr msg;
+	
+	msg.msg_name = NULL;
+	msg.msg_namelen = 0;
+	msg.msg_iov = iov;
+	msg.msg_iovlen = 1;
+
+	struct cmsghdr cm;
+
+	msg.msg_control = &cm;
+	msg.msg_controllen = CMSG_LEN(sizeof(int));
+
+	msg.msg_flags = 0;
+
+	if(recvmsg(sock_fd,&msg,0) == -1)
+	{
+		perror("recvmsg error");
+	}
+
+	int fd =*(int *) CMSG_DATA(&cm);
+	return fd;
+}
+
+void  wait_fd_init(int fds[])
+{
+	int i = 0;
+	for( ; i < NCLIENT;i++)
+	{
+		fds[i] = -1;
+	}
+}
+
+void wait_fd_add(int fds[],int fd)
+{
+	int i = 0;
+	for( ; i < NCLIENT;i++)
+	{
+		if(fds[i] == -1)
+		{
+			fds[i] = fd;
+			break;
+		}
+	}
+}
+
+int  wait_fd_get(int fds[])
+{
+	int i = 0;
+	int fd = -1;
+	for( ;i < NCLIENT;i++)
+	{
+		if(fds[i] != -1)
+		{
+			fd = fds[i];
+			fds[i] = -1;
+			break;
+		}
+		
+	}
+	return fd;
+}
+int main()
+{
+	int pipefd[MAXFD];
+
+	signal(SIGCHLD,SIG_IGN);
+	int child_flg[MAXFD] = {0};
+	int wait_fd[NCLIENT];// 最好链表
+
+	int m_free = MAXFD;
+	int m_run = 0;
+	int m_wait = 0;
+ 
+	wait_fd_init(wait_fd);
+	create_process(pipefd);
+
+	int sockfd = create_socket();
+
+	int epfd = epoll_create(NSIZE);
+
+	struct epoll_event events[NSIZE];
+
+	epoll_add(epfd,sockfd);
+	int i = 0;
+	for( ;i < MAXFD;i++)
+	{
+		epoll_add(epfd,pipefd[i]);
+	}
+
+	while( 1 )
+	{
+		int n = epoll_wait(epfd,events,NSIZE,-1);
+		if(n == -1)
+		{
+			perror("epoll wait error");
+		}
+		else if(n == 0)
+		{
+			printf("time out\n");
+		}
+		else
+		{
+			int i = 0;
+			for(; i < n;i++)
+			{
+				int fd = events[i].data.fd;
+				if( events[i].events & EPOLLIN)
+				{
+					if( fd == sockfd )
+					{
+						struct sockaddr_in caddr;
+						int len = sizeof(caddr);
+
+						int c = accept(fd,(struct sockaddr*)&caddr,&len);
+
+						if( c == -1 )
+						{
+							continue;
+						}
+
+						if(m_free > 0)
+						{
+							int j = 0;
+							for( ; j < MAXFD;j++)
+							{
+								if(child_flg[j] == 0)
+								{
+									send_fd(pipefd[j],c);
+									child_flg[j] = 1;
+
+									close(c);
+									m_free--;
+									m_run++;
+
+									break;
+								}
+							}
+									
+						}
+						else
+						{
+							wait_fd_add(wait_fd,c);
+							m_wait++;
+						}
+						printf("wait:%d,free:%d,work:%d\n",m_wait,m_free,m_run);
+					}
+					else
+					{
+						char buff[128] = {};
+						read(fd,buff,127);
+						if( strcmp(buff,"free") != 0)
+						{
+		//					printf("close");
+						}
+						if( m_wait > 0)
+						{
+							send_fd(fd,wait_fd_get(wait_fd));
+							m_wait--;
+						}
+						else
+						{
+							int j = 0;
+							for( ;j < MAXFD;j++)
+							{
+								if(fd == pipefd[j])
+								{
+									child_flg[j] = 0;
+									break;
+								}
+							}
+							m_free++;
+							m_run--;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+
