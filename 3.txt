@@ -1,0 +1,3793 @@
+#include<iostream>
+using namespace std;
+typedef void(*PFUN)();
+class B
+{
+public:
+     B() :_b(0){}
+     virtual void fun1()
+     {
+          cout << "B::fun1()" << endl;
+     }
+     virtual void fun2()
+     {
+          cout << "B::fun2()" << endl;
+     }    
+private:
+     int _b;
+};
+class D:public B
+{
+public:
+     D() :_d(1){}
+     void fun1()
+     {
+          cout << "D::fun1()" << endl;
+     }
+     virtual void fun3()
+     {
+          cout << "D::fun3()" << endl;
+     }
+private:
+     int _d;
+};
+void PrintVT(int b)//根据虚函数表中的函数地址调用虚函数
+{
+     PFUN pfun = NULL;
+     int *ptr = (int *)b;
+     int i = 0;
+     while (ptr[i])
+     {
+          pfun = (PFUN)ptr[i];//将虚函数的地址转换为函数指针
+          pfun();//用函数指针调用函数
+          i++;
+     }
+}
+int main()
+{
+     D d;
+     PrintVT(*(int *)&d);//取出虚函数表的地址
+     getchar();
+     return 0;
+}
+什么是循环引用嘞？我们来举栗子好了
+Struct Node
+{
+    shared_ptr<Node> _next;
+    shared_ptr<Node> _prev;
+    int _data;
+    Node(int a):_data(a),_next(NULL),_prev(NULL)
+    {}
+    ~Node()
+    {
+        cout<<"~Node()"<<endl;
+    }
+};
+void Test()
+{
+    shared_ptr<Node> cur(new Node(1));
+    shared_ptr<Node> next(new Node(2));
+    cur -> _next = next;
+    next -> _prev = cur;
+}
+定制删除器（使用模板实现）
+#include<iostream>
+#define _CRT_SECURE_NO_WARNINGS 1
+//**************定制删除器的实现***********
+template<class T,class Del=Delete<T> >
+class SharedPtr
+{
+public:
+    /*SharedPtr(T *ptr, Del del) :_ptr(ptr), _del(del), _pCount(new int(1))
+    {}*/
+    SharedPtr(T *ptr) :_ptr(ptr), _pCount(new int(1))
+    {}
+    SharedPtr(const SharedPtr& sp)
+    {
+        _ptr = sp._ptr;
+        _pCount = sp._pCount;
+        (*_pCount)++;
+    }
+    SharedPtr& operator =(SharedPtr  sp)
+    {
+        swap(_ptr, sp._ptr);
+        swap(_ptr, sp._pCount);
+        return *this;
+    }
+    ~SharedPtr()
+    {
+        _Relese();
+    }
+private:
+    T *_ptr;
+    T *_pCount;
+    Del _del;
+    void  _Relese()
+    {
+        if (--(*_pCount) == 0)
+        {
+            _del(_ptr);
+            _del(_pCount);
+        }
+    }
+};
+template <class T>
+struct Free
+{
+    void operator() (void *sp)
+    {
+        free(sp);
+        sp = NULL;
+    }
+};
+template <class T>
+struct Delete
+{
+    void operator() (const T*sp)
+    {
+        delete sp;
+    }
+};
+template <class T>
+struct Fclose
+{
+    void operator() (void *sp)
+    {
+        fclose(sp);
+        sp = NULL;
+    }
+};
+void testSharePtrDelete()
+{
+    SharedPtr<int> sp1(new int(5));
+    SharedPtr<int> sp2(sp1);
+}
+void testSharePtrFree()
+{
+    SharedPtr<int,Free<int>> sp1((int *)malloc(sizeof(int)*10));
+    SharedPtr<int,Free<int>> sp2(sp1);
+}
+void testSharePtrFclose()
+{
+    FILE *pf = fopen("","r");
+    SharedPtr<FILE, Fclose<FILE>> sp1(pf);
+    SharedPtr<FILE, Fclose<FILE>> sp2(sp1);
+}
+空指针也能调用成员函数？
+class cal
+{
+public:
+    void show()
+    {
+        cout << "cal::Show()" << endl;
+    }
+ 
+};
+int main()
+{
+    cal *pcal = NULL;
+    pcal->show();
+    getchar();
+    return 0;
+}
+#endif
+int main()
+{
+    int i=0;
+    int j=0;
+    int flag=0;//设置标志变量
+    int str[]={1,3,5,7,9,2,4,6,8,0};
+    int n=sizeof(arr)/sizeof(arr[0]);
+    for(i=0;i<n-1;i++)
+    {       
+        for(j = 0;j <= n-i-1;n++)
+        {
+            flag = 0;
+            if(str[j] > str[j+1])
+            {
+                int tmp = 0;
+                tmp = str[j];
+                str[j] = str[j+1];
+                str[j+1]=tmp;
+                flag=1;
+            }
+        }
+        if(flag==0)
+            break;
+    }
+     for (i = 0; i < n; i++)
+    {
+        printf("%d ", b[i]);
+    }
+    system("pause");
+    return 0;
+}
+#include<iostream>
+#include<stdlib.h>
+using namespace std;
+class A
+{
+public:
+     A(int a = 0,int b = 0)
+      :_a(a)
+      , _b(b)
+     {
+          cout << "A()" << endl;
+     }
+     ~A()
+     {
+          cout << "~A()" << endl;
+     }
+private:
+     int _a;
+     int _b;
+};
+int main()
+{
+     /*A *pa = new A[10];
+     delete[] pa;*/
+ 
+     A *pa = (A*)operator new(10 * sizeof(A)+4);
+     *((int *)pa) = 10;//将第一个（占用4个字节）空间赋值为创建对象的个数
+     A *pStart = (A*)((int *)pa + 1);
+     //new操作符返回的地址是开辟的连续空间的向后移4个字节之后的地址
+ 
+     for (int i = 0; i < 10; i++)
+     {
+          new(pStart + i)A(1, 0);// new表达式（placeement new） 形式(place_address)type(initializer-list)
+     }
+     int count = *((int *)pStart - 1);
+     //计算开辟的连续内存空间最前面的占用4个字节的空间中所存的释放空间之前调用析构函数的次数
+     for (int i = 0; i < count; i++)
+     {
+          pStart[i].~A();//delete在释放前自动调用析构函数
+     }
+     operator delete[]((int *)pStart - 1);//调用operator delete[](char *)函数释放内存空间
+     system("pause");
+     return 0;
+}
+// 判断两个链表是否相交，假设两个链表都不带环。
+int CheckCross(pList list1, pList list2)
+{
+ pLinkNode l1 = list1;
+ pLinkNode l2 = list2;
+ if (l1 == NULL || l2 == NULL)
+ {
+  return 0;
+ }
+ while (l1->next) 
+ {
+  l1 = l1->next;
+ } //遍历l1链表至链表末尾
+ while (l2->next)
+ {
+  l2 = l2->next;
+ }//遍历l2链表至链表末尾
+ if (l1 == l2) //判断两链表最后的一个节点是否相同，相同则相交返回1
+ {
+  return 1;
+ }
+ else
+  return 0;//不同则返回0
+}
+
+分别遍历两个链表，记录两链表的长度len_l1和len_l2，让较长的链表的指针先走|len_l1 - len_l2|步，然后两个指针一起走，两指针相遇的节点就是两个链表的交点。
+
+pLinkNode LinkCrossNode(pList list1, pList list2)
+{
+ int len_l1=0;
+ int len_l2 = 0;
+ int len = 0;
+ pLinkNode l1 = list1;
+ pLinkNode l2 = list2;
+ pLinkNode longlink = NULL;
+ pLinkNode shortlink = NULL;
+ while (l1)
+ {
+  len_l1++;
+  l1 = l1->next;
+ }//记录第一个链表长度
+ while (l2)
+ {
+  len_l2++;
+  l2 = l2->next;
+ }//记录第二个链表长度
+ if (len_l1 > len_l2)
+ {
+  len = len_l1 - len_l2;
+   while (len--)
+   {
+   list1 = list1->next;
+   }//较长链表先走len = |len_l1 - len_l2|步
+ }
+ else
+ {
+  len = len_l2 - len_l1;
+  while (len--)
+  {
+   list2 = list2->next;
+  }//较长链表先走len = |len_l1 - len_l2|步
+ }
+  
+ while (list1!= list2)//两指针同时走，相遇点就是两个链表的交点
+ {
+  list1 = list1->next;
+  list2 = list2->next;
+ }
+ return list1;
+}
+pLinkNode CheckCycle(pList head)
+{
+ pLinkNode fast = head;
+ pLinkNode slow = head;
+ while (fast && fast->next)
+ {
+  fast = fast->next->next;
+  slow = slow->next;
+  if (fast == slow)
+  {
+   return slow;   两指针相遇，链表带环，返回相遇点
+  }
+ }
+ return NULL; //若两指针不相遇，返回null，链表不带环
+}
+ysf
+pLinkNode JoseCycle(pList *pHead, int num)
+{
+ assert(pHead);
+ pLinkNode cur = *pHead;
+ pLinkNode del = NULL;
+ int count = 0;
+ while (1)
+ {
+  count = num;
+  if (cur == cur->next->next) //当前节点的后一个节点的next是当前节点时，结束循环
+  {
+   break;
+  } 
+   while (--count)    //找到第num个元素
+   {
+    cur = cur->next;
+   }
+   del = cur->next;
+   cur->data = cur->next->data;
+   cur->next = cur->next->next;
+   free(del); //删除第num个元素
+   del == NULL;
+ }
+ *pHead = cur;
+ return cur;
+}
+void Test13() // 测试约瑟夫环
+{
+ pList l1;
+ int i = 0;
+ InitLinkList(&l1);
+ for (i = 1; i <= 41; i++)
+ {
+  PushBack(&l1, i);
+ }
+ pLinkNode pos = Find(l1,41);  //查找元素,Find函数在单链表的实现中
+ pos->next = l1;     //构建环
+ pos=JoseCycle(&l1,3);   
+ printf(" %d \n", pos->data);
+ printf(" %d \n", pos->next->data);
+}
+面试题1已经判断过链表带环，且返回两指针相遇节点，求环长度时我们可以让一个指针从相遇节点处开始遍历，当再次回到相遇节点时，它走过的步数就是环的长度。
+int GetCircleLength(pLinkNode meet)
+{
+ pLinkNode cur = meet;
+ int count = 0;
+ do
+ {
+  cur = cur->next; 
+  count++;
+ } while (cur != meet);
+ return count;
+}
+#include<stdio.h>
+void reverse(char *left,char *right)
+{
+ while (left < right)
+ {
+  char tmp = *left;
+  *left = *right;
+  *right = tmp;
+  left++;
+  right--;
+ }
+}
+void left_move(char *str, int n)
+{    
+ int len = strlen(str);
+ reverse(str, str + n - 1);
+ reverse(str + n, str + len - 1);
+ reverse(str, str + len - 1);
+}
+int main()
+{
+ char str[] = "abcdef";
+ int n = 0;
+ scanf("%d", &n);
+ left_move(str, n);
+ printf("%s", str);
+ system("pause");
+ return 0;
+}
+
+/*文件的分割*/
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define NUM 1024 * 1024 * 100
+int main()
+{
+        //所需分割的文件路径
+    FILE *fr = fopen("F:\\PL.exe", "rb");
+    if (fr == NULL)
+    {
+        exit(-1);
+    }
+     
+    char *buff = (char*)malloc(sizeof(char) * NUM);
+    if (buff == NULL)
+    {
+        exit(-2);
+    }
+    size_t rs = 0;
+    FILE *fw;// = fopen("F:\\1.exe", "wb");
+ 
+    //将分割的文件循环存放在目标路径下
+    char str[100] = "F:\\";    
+    char tmp_file[100];
+    char name[100];
+    int i = 1;
+     
+    while((rs  = fread(buff,sizeof(char),NUM, fr)) > 0)
+    {
+        // sprintf
+        itoa(i,name,10);//    i->1-->name-->"1"
+        strcpy(tmp_file, str);// tmp_file ->>"f:\\"
+        strcat(tmp_file,name);//       f:\\1
+        strcat(tmp_file, ".exe");
+         
+        fw = fopen(tmp_file, "wb");
+        fwrite(buff,sizeof(char) ,rs, fw);
+        fclose(fw);
+ 
+        i++;
+    }
+     
+    fclose(fr);
+    return 0;
+}
+ 
+/*文件的合并*/
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define NUM 1024*1024*100// 10MB
+int main()
+{
+    FILE *fr1 = fopen("F:\\1.exe", "rb"); //分割后的文件路径
+    FILE *fr2 = fopen("F:\\2.exe", "rb");
+    FILE *fw = fopen("F:\\meger.exe", "wb");//文件合并后的目标路径
+     
+    char *buff = (char*)malloc(sizeof(char) * NUM);
+    //
+    size_t rs = 0;
+    FILE *arr[] = {fr1,fr2};
+    for (int i=0;i<2;i++)
+    {
+        while((rs = fread(buff,sizeof(char),NUM, arr[i])) > 0)
+        {      
+            fwrite(buff, sizeof(char), rs, fw);
+        }
+         
+        fclose(arr[i]);
+    }
+     
+    fclose(fw);
+    free(buff);
+ 
+    return 0;
+}
+，模拟实现strstr
+strstr为字符串查找函数，其原型为：
+1
+char *strstr( const char *string, const char *strCharSet );
+这个函数就是在string中寻找是否含有子字符串strCharSet，寻找过程两个都不需要发生改变，所以将它们声明为const常量。返回值为char *这样可以方便链式访问。代码实现如下：
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+char *my_strstr(const char *dest,const char *src)
+{
+    assert(dest);
+    assert(src);
+    char *p1 = NULL;
+    char *p2 = NULL;
+    char *ptr = dest;
+    while(*ptr)
+    {
+        p1 = ptr;
+        p2 = src;
+        while (*p1 == *p2)
+        {
+            p1++;
+            p2++;
+            if (*p2 == '\0')
+            {
+                return ptr;
+            }
+        }
+        ptr++;
+    }
+    return NULL;
+}
+int main()
+{
+    char arr[20] = "abcdefg";
+    char *p = "def";
+    char *ret = my_strstr(arr, p);
+    if (ret != NULL)
+    {
+        printf("%p\n", ret);
+        printf("%s\n", ret);
+    }
+    else
+    {
+        printf("not exist\n");
+    }
+    system("pause");
+    return 0;
+}
+2，模拟实现strcpy
+strcpy是字符串拷贝函数，其原型为：
+1
+char *strcpy( char *strDestination, const char *strSource );
+这个函数就是将strSource中的字符串拷贝到strDestination中，strSource不会发生改变，所以用const加以修饰。代码实现如下：
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+char *my_strcpy(char *dest, const char *src)
+{
+    assert(dest);
+    assert(src);
+    char *ret = dest;
+    while (*dest++ = *src++)
+    {
+        ;
+    }
+    return ret;
+}
+int main()
+{
+    char arr[20] = "abcde";
+    char *p = "xyzw";
+    char *ch=my_strcpy(arr, p);
+    printf("%s\n", ch);
+    system("pause");
+    return 0;
+}
+3，模拟实现strlen
+strlen是求取字符串长度的函数，其原型为：
+1
+size_t strlen( const char *string );
+size_t其实就是无符号整型。string不需要修改，所以应用const保护起来。代码实现如下：
+（1）计数器
+ 
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+int my_strlen(char *str)
+{
+    assert(str);
+    int count = 0;
+    while (*str)
+    {
+        count++;
+        str++;
+    }
+    return count;
+}
+int main()
+{
+    char arr[] = "abcdefghi";
+    int len=my_strlen(arr);
+    printf("%d\n", len);
+    system("pause");
+    return 0;
+}
+（2）递归
+ 
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+int my_strlen(const char *str)
+{
+    assert(str);
+    if (*str)
+    {
+        return 1 + my_strlen(str + 1);
+    }
+    return 0;
+}
+int main()
+{
+    char arr[] = "abcdefghi";
+    int len=my_strlen(arr);
+    printf("%d\n", len);
+    system("pause");
+    return 0;
+}
+（3）指针减指针
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+int my_strlen(const char *str)
+{
+    assert(str);
+    const char *p = str;//为了防止通过p修改了str，所以将p设为常量指针
+    while (*str)
+    {
+        str++;
+    }
+    return str - p;//指针减指针
+}
+int main()
+{
+    char arr[] = "abcdefghi";
+    int len=my_strlen(arr);
+    printf("%d\n", len);
+    system("pause");
+    return 0;
+}
+4，模拟实现strcat
+strcat是字符串追加函数，其原型为：
+1
+char *strcat( char *strDestination, const char *strSource );
+就是将字符串strSource追加在字符串strDestination后面，代码 实现如下：
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+char *my_strcat(char *dest, const char *src)
+{
+    assert(dest);
+    assert(src);
+    char *ret = dest;
+    while (*dest)
+    {
+        dest++;
+    }
+    while (*dest++ = *src++)
+    {
+        ;
+    }
+    return ret;
+}
+int main()
+{
+    char arr[20] = "abcd";
+    char *p = "efgh";
+    char *ch=my_strcat(arr, p);
+    printf("%s\n", ch);
+    system("pause");
+    return 0;
+}
+5，模拟实现strcmp
+strcmp是字符串比较函数，它的原型为：
+1
+int strcmp( const char *string1, const char *string2 );
+按位比较字符串中每个字符的ASCII码值。如果string1大于string2，则返回1，如果小于则返回-1，相等返回0。代码实现如下：
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+int my_strcmp(const char *dest, const char *src)
+{
+    assert(dest);
+    assert(src);
+    while (*dest == *src)
+    {
+        if (*dest =='\0')
+        {
+            return 0;
+        }
+        dest++;
+        src++;
+    }
+    return *dest - *src;
+}
+int main()
+{
+    const char *p1 = "abcdef";
+    const char *p2 = "aef";
+    int ret = my_strcmp(p1, p2);
+    if (ret == 0)
+    {
+        printf("p1==p2\n");
+    }
+    else if (ret >0)
+    {
+        printf("p1>p2\n");
+    }
+    else
+    {
+        printf("p1<p2\n");
+    }
+    system("pause");
+    return 0;
+6，模拟实现memcpy
+memcpy是内存拷贝函数，它的原型是：
+1
+void *memcpy( void *dest, const void *src, size_t count );
+它从源src所指的内存空间的起始位置开始拷贝count个字节到目标dest所指的内存地址的起始位置中，函数返回指向dest的指针。src和dest不一定是数组，任意可读写的空间都可以。 
+ 
+ 
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+void *my_memcpy(void *buf1, const void *buf2, int count)
+{
+    assert(buf1);
+    assert(buf2);
+    void *ret = buf1;
+    char *dest = (char *)buf1;
+    char *src = (char *)buf2;
+    char *ptr = dest;
+    while (count--)
+    {
+        *dest++ = *src++;
+    }
+    return buf1;
+}
+int main()
+{
+    char arr1[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+    char arr2[10] = { 0 };
+    int i = 0;
+    my_memcpy(arr1, arr2, 10);
+    for (i = 0; i < 10; i++)
+    {
+        printf("%d\n", arr1[i]);
+    }
+    system("pause");
+    return 0;
+}
+注意：
+src和dest所指的内存区域有可能重叠，但是memcpy不能保证src所在重叠区域在拷贝之前不被覆盖。使用memmove可以解决这个问题。
+7，模拟实现memmove
+memmove也是内存拷贝函数，它的原型是：
+1
+void *memmove( void *dest, const void *src, size_t count );
+由str复制count个字节到dest中，，如果目标区域和源区域有重叠的部分，memmove能够保证src在被覆盖之前将重叠部分的字节拷贝到dest中。
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+void *my_memmove(void *buf1, const void *buf2, int count)
+{
+    assert(buf1);
+    assert(buf2);
+    void *ret = buf1;
+    char *dest = (char *)buf1;
+    char *src = (char *)buf2;
+    if ((dest > src) && (dest < src + count))
+    {
+        while (count--)
+        {
+            *(dest+count) = *(src+count);
+        }
+    }
+    else
+    {
+        while (count--)
+        {
+            *dest++ = *src++;
+        }
+    }
+    return ret;
+}
+char *my_strncat(char *dest, const char *src, uint count)//模拟实现strncat函数
+{
+    assert(dest);
+    assert(src);
+    int *ret = dest;
+    while (*dest)
+    {
+        dest++; //找到dest中的\0
+    }
+    while (count--)
+    {
+        *dest++ = *src++;
+    }
+    *dest = '\0';
+    return ret;
+}
+
+#include<stdio.h>
+#include<string.h>
+#include<stdbool.h>
+#include<stdlib.h>
+void my_sprintf(char * arr, int len)
+{
+    bool start = true;
+    for (int j = 0; j < len; j++)
+    {
+        if (arr[j] != '0')
+        {
+            start = false;
+        }
+        if (!start)
+        {
+            printf("%c", arr[j]);
+        }
+ 
+    }
+    printf("\n");
+}
+void tranf(char *arr, int len, int index)
+{
+    if (index == len - 1)
+    {
+        my_sprintf(arr, len);
+        return;
+    }
+    for (int i = 0; i < 10; i++)
+    {
+        arr[index + 1] = '0' + i;
+        tranf(arr, len, index + 1);
+    }
+}  
+void start(int n)
+{
+    if (n <= 0)
+        return;
+    char *arr = (char *)malloc((n+1)*sizeof(char));
+    arr[n] = '\0';
+    for (int i = 0; i < 10; i++)
+    {
+        arr[0] = i + '0';
+        tranf(arr, n, 0);
+    }
+    free(arr);
+}
+ 
+  int main()
+    {
+            //char arr[10];
+            int num = 0;
+            //int len = strlen(arr);
+            scanf_s("%d", &num);
+            start(num);
+            system("pause");
+            return 0;
+    }
+
+
+#include<stdio.h>
+int main()
+{
+	char string[81];
+	int i,num=0,word=0;
+	char c;
+	gets(string);    //输入一个字符串给字符组string
+  for(i=0;(c=string[i])!='\0';i++)    //只要字符不是'\0'就继续执行循环
+	  if(c==' ')word=0;   //如果是空字符，word为0
+	  else if(word==0)     //如果不是空格字符并且word原值为0
+	  {
+	   word=1;            //使word为1
+	   num++;           //num累加表示一个单词
+	  }
+	  printf("there are %d world in this line.\n",num);     //输出单词数
+	  return 0;
+}
+
+#include<iostream>
+#include<stack>
+#include<string>
+#include<assert.h>
+using namespace std;
+ 
+template<class T>
+class Stack
+{
+public:
+    void Push(const T& x);
+    void Pop();
+    T& Min();
+    void PrintS();
+private:
+    stack<T> Sk;//存放栈中所有元素的
+    stack<T> MinSk;//存放栈中最小元素的
+};
+template<class T>
+void Stack<T>::Push(const T& x)
+{
+    Sk.push(x);
+    //当MinSk为空时，先存放一个元素；当比较入栈元素小于栈顶元素时，入栈
+    if (MinSk.empty() || x < MinSk.top())
+    {
+        MinSk.push(x);
+    }
+}
+template<class T>
+void Stack<T>::Pop()
+{
+    if (Sk.empty())
+    {
+        cout << "stack is empty!" << endl;
+        return;
+    }
+    //如果出栈元素等于MinSk中栈顶元素，则MinSk需pop()该元素，使MinSk栈顶始终存放Sk栈中最小元素
+    if (Sk.top() == MinSk.top())
+    {
+        MinSk.pop();
+    }
+    Sk.pop();
+}
+template<class T>
+T& Stack<T>::Min()
+{
+    assert(!MinSk.empty());
+    return MinSk.top();
+}
+template<class T>
+void Stack<T>::PrintS()
+{
+    if (Sk.empty())
+    {
+        cout << "stack is empty!" << endl;
+        return;
+    }
+    stack<T> tmp = Sk;
+    stack<T> mintmp = MinSk;
+    cout << "stack: ";
+    while (!tmp.empty())
+    {
+        cout << tmp.top() << " ";
+        tmp.pop();
+    }
+    cout << "\nminstack: ";
+    while (!mintmp.empty())
+    {
+        cout << mintmp.top() << " ";
+        mintmp.pop();
+    }
+    cout << endl;
+}
+//测试用例
+void Test4()
+{
+    //Stack<int> s1;
+    //s1.Push(9);
+    //s1.Push(5);
+    //s1.Push(7);
+    //s1.Push(3);
+    //s1.Push(8);
+    ////s1.Pop();
+    ////s1.Pop();
+    ////s1.Pop();
+    ////s1.Pop();
+    ////s1.Pop();
+    ////s1.Pop();
+    Stack<string> s1;
+    s1.Push("sssss");
+    s1.Push("syikl");
+    s1.Push("yyyyy");
+    s1.Push("fffff");
+    s1.Push("lllll");
+    s1.PrintS();
+    cout << s1.Min() << endl;
+}
+template<class T>
+class Stack
+{
+public:
+    Stack()
+        :_arr(NULL)
+        , _size(0)
+        , _capacity(0)
+    {}
+    Stack(const Stack<T>& s)
+        :_arr(new T[s._size])
+        , _size(s._size)
+        , _capacity(s._size)
+    {
+        for (size_t i = 0; i < _size; i++)
+        {
+            _arr[i] = s._arr[i];
+        }
+    }
+    Stack<T>& operator=(const Stack<T>& s)
+    {
+        if (this != &s)
+        {
+            T* tmp = new T[s._size];
+            delete[] _arr;
+            for (size_t i = 0; i < s._size; i++)
+            {
+                tmp[i] = s._arr[i];
+            }
+            _arr = tmp;
+            _size = s._size;
+            _capacity = s._capacity;
+        }
+        return *this;
+    }
+    ~Stack()
+    {
+        if (_arr)
+        {
+            delete[] _arr;
+        }
+    }
+public:
+    void _CheckCapacity(size_t size)
+    {
+        if (size > _capacity)
+        {
+            _capacity += _capacity * 2 + 3;
+        }
+        T* tmp = new T[_capacity];
+        if (_arr)
+        {
+            for (size_t i = 0; i < _size; i++)
+            {
+                tmp[i] = _arr[i];
+            }
+        }
+        delete[] _arr;
+        _arr = tmp;
+    }
+    void Push(const T& x)
+    {
+        _CheckCapacity(_size + 1);
+        _arr[_size++] = x;
+    }
+    void Pop()
+    {
+        assert(_size > 0);
+        --_size;
+    }
+    bool Empty()
+    {
+        return _size == 0;
+    }
+    size_t Size()
+    {
+        return _size;
+    }
+    T& Top()
+    {
+        return _arr[_size - 1];
+    }
+    void PrintStack()
+    {
+        if (_size == 0)
+        {
+            cout << "Stack is empty!";
+        }
+        else
+        {
+            for (size_t i = 0; i < _size; i++)
+            {
+                cout << _arr[i] << " ";
+            }
+            cout << endl;
+        }
+    }
+private:
+    T* _arr;
+    size_t _size;
+    size_t _capacity;
+};
+
+#pragma once
+ 
+#ifndef __BIGDATA_H__
+#define __BIGDATA_H__
+ 
+#define _CRT_SECURE_NO_WARNINGS 1
+#include<iostream>
+using namespace std;
+#include<string.h>
+#include<assert.h>
+ 
+//1、考虑当数值小时，运算速度尽量贴近内置类型（所以，结构会有两个-->内置类型long long 及大数的 char*）
+//2、构造时可能的输入{"1234" "0001234"  "1564adf"  "   "  "+(-)12345" }
+//
+ 
+typedef long long INT64;
+ 
+//string MAX_INT64 = "9223372036854775807";
+//string MIN_INT64 = "-9223372036854775808";
+ 
+//enum{ MAX_INT64 = 9223372036854775807, MIN_INT64 = -9223372036854775808 };//不行enum后是int类型
+//
+ 
+const INT64 MAX_INT64 = 0x7fffffffffffffff;// 9223372036854775807;
+const INT64 MIN_INT64 = 0x8000000000000000;//-9223372036854775808;
+ 
+ 
+class BigData
+{
+public:
+ BigData(INT64 value = 0);
+ BigData(const string pData);
+ 
+ BigData operator+(const BigData bigdata);
+ BigData operator-(const BigData bigdata);
+ BigData operator*(const BigData bigdata);
+ BigData operator/(const BigData bigdata);
+ 
+ ~BigData();
+ 
+ void Print();
+ 
+private:
+ bool PDataIsOverINT64()const;
+ friend std::ostream&operator<<(std::ostream& _cout, const BigData& bigdata);//不能在_cout前加const   ->_cout<<10<<endl;将不能通过
+  
+ BigData Add(string pData1, string pData2);//并不一定要写成成员函数 (也可以写成一般函数被使用)
+ BigData Sub(string pData1, string pData2);
+ BigData Mul(string pData1, string pData2);
+ BigData Div(string pData1, string pData2);
+ 
+private:
+ INT64 _value;
+ string _pData;
+};
+ 
+#endif __BIGDATA_H__
+ 
+ 
+//<BIGDATA.cpp>
+ 
+ 
+#include"BIGDATA.h"
+ 
+BigData::BigData(INT64 value)//若输入的数值位数大于MAX_DATA，系统编译不通过，当位数一致且大于时，转为负，无能为力
+ :_value(value)
+{
+ //在_pData中加入value
+ void Invert(string& pdata);
+ size_t i = 0;
+ INT64 tmp = 0;
+ _pData.append(1, '+');
+ if (value < 0)
+ {
+  _pData[0] = '-';
+  value *= -1;
+ }
+ while (value != 0)
+ {
+  tmp = value % 10;
+  _pData.append(1, (char)(tmp + '0'));
+  value /= 10;
+ }
+ Invert(_pData);
+}
+ 
+BigData::BigData(const string  pData)
+{
+ //解决各种特殊情况
+ //{"1234" "0001234"  "1564adf"  "   "  "+(-)12345" NULL }
+ //参考atoi()函数处理办法
+  
+ 
+ //跳过符号将输入字符串都归为一般
+ 
+//  //判是否是数字字符isdigit(int c)是-1/否0  还有判空字符（宏定义） isspace(int c)  头文件<ctype.h>
+ 
+ char* tmp = (char*)&pData[0];
+ _pData.append(1, '+');  //添加符号(默认为'+')
+ 
+ if ((*tmp < '0' || *tmp > '9') && *tmp != ' '&& *tmp != '+'&& *tmp != '-'&& *tmp != '\t')  //排除其他符号
+ {
+  //cout << "false" << endl;
+  _pData.append(1, '0');
+  _value = 0;
+  return;
+ }
+ 
+ while(isspace(*tmp)) //while (*tmp==' ')   //消除前面的空格(tab)
+ {
+  tmp++;
+ }
+ 
+ if (*tmp == '+' || *tmp == '-')  //跳过符号/修正符号
+ {
+  if (*tmp == '-')
+  {
+   _pData[0] = '-';
+  }
+  tmp++;
+ }
+ 
+ while (*tmp == '0')   //消除前面的0（必须先消除空格，再消除0，最后判断+（-））
+ {
+  tmp++;
+ }
+ 
+//*********************
+ //一个一个追加效率不高-->转化为一次开辟
+ //while(isdigit(*tmp))  //while (*tmp >= '0'&& *tmp <= '9')
+ //{
+ // _pData.append(1, *tmp++);
+ //}
+//*********************
+ 
+ _pData.resize(strlen(tmp) + 1);
+ int i = 1;
+ while (isdigit(*tmp))
+ {
+  _pData[i++] = *tmp++;
+ }
+ 
+ if (*tmp != '\0')
+ {
+  //cout << "false" << endl;
+  _value = 0;
+  return;
+ }
+ 
+ //若超出INT64表示的范围则用string管理，否则用INT64,string综合管理
+ if (!PDataIsOverINT64())
+ {
+  size_t i = 1;
+  _value = 0;
+  for (i = 1; i < _pData.size(); i++)
+  {
+   _value = _value * 10 + _pData[i] - '0';
+  }
+  if (_pData[0] == '-')
+   _value *= -1;
+ }
+ 
+}
+ 
+BigData::~BigData()
+{}
+ 
+bool BigData::PDataIsOverINT64()const
+{
+ std::string tmp("+9223372036854775807");
+ if (_pData[0] == '-')
+ {
+  tmp = "-9223372036854775808";
+ }
+ 
+ if ((_pData.size() < tmp.size())||
+  (_pData.size() == tmp.size() && _pData <= tmp))
+ {
+  return false;
+ }
+ return true;
+ 
+}
+ 
+std::ostream& operator<<(std::ostream& _cout, const BigData& bigdata)//不能在_cout前加const   ->_cout<<10<<endl;将不能通过
+{
+ if (!bigdata.PDataIsOverINT64())
+ {
+  _cout << bigdata._value;
+ }
+ else
+ {
+  char* tmp = (char*)&bigdata._pData[0];
+  if ('+' == *tmp)
+  {
+   tmp++;
+  }
+  while (*tmp)
+  {
+   _cout << *tmp++;
+  }
+  //_cout << endl;
+ }
+ return _cout;
+}
+ 
+void BigData::Print()
+{
+ if (!PDataIsOverINT64())
+ {
+  cout << _value << endl;   //printf("%lld\n", _value);
+  return;
+ }
+ if (*(char*)&_pData[0] == '+')
+ {
+  printf("%s\n", &_pData[1]);
+  return;
+ }
+ printf("%s\n",&_pData[0]);
+}
+ 
+void Invert(string& pdata)
+{
+ int left = 1;
+ int right = pdata.size() - 1;
+ while (left < right)
+ {
+  swap(pdata[left++], pdata[right--]);
+ }
+}
+ 
+BigData BigData:: operator+(const BigData bigdata)
+{
+ //1、都在INT64范围内<运算后在范围内，运算后不在范围内>（再进行构造可以解决）
+ //2、都不在INT64范围内<运算后在范围内，运算后不在范围内>
+ //3、一个在一个不在<运算后在范围内，运算后不在范围内>
+ //
+ //如果全部用string进行计算，就达不到数值小时用基本类型提高运算的目的
+ //由于实现结构是若在INT64范围内_value与_pData共同管理，若不在只由_pData管理
+ 
+ //所以，可以将上面分化成两类<1、都在范围内(<运算后在范围内，运算后不在范围内>) 2、至少有一个不在范围内>
+ 
+ 
+ if (!PDataIsOverINT64() && !bigdata.PDataIsOverINT64())
+ {
+  if (_pData[0] != bigdata._pData[0])//若异号，则肯定不会溢出
+  {
+   return BigData(_value + bigdata._value);
+  }
+  else //同号
+  {
+   if (_pData[0] == '+')//为正
+   {
+    if (_value <= MAX_INT64 - bigdata._value)//结果不溢出
+    {
+     return BigData(_value + bigdata._value);
+    }
+    else //结果溢出
+    {
+     return BigData(Add(_pData, bigdata._pData));
+    }
+   }
+   else //为负
+   {
+    if (_value >= MIN_INT64 - bigdata._value)//结果不溢出
+    {
+     return BigData(_value + bigdata._value);
+    }
+    else //结果溢出
+    {
+     return BigData(Add(_pData, bigdata._pData));
+    }
+   }
+  }
+ }
+ else//至少有一个溢出
+ {
+  return BigData(Add(_pData, bigdata._pData));
+ }
+}
+ 
+ 
+ 
+BigData BigData:: operator-(const BigData bigdata)
+{
+ //1、都在范围内(运算后在范围内，运算后不在范围内) 
+ //2、至少有一个不在范围内
+ 
+ if (!PDataIsOverINT64() && !bigdata.PDataIsOverINT64())
+ {
+  //同号相减不可能溢出，异号相减才可能溢出
+ 
+  if (_pData[0] == bigdata._pData[0])//同号
+  {
+   return BigData(_value - bigdata._value);
+  }
+  else// 异号
+  {
+   if (_pData[0] == '+')//第一个为正，第二个为负
+   {
+    if (_value < MAX_INT64 + bigdata._value)//结果不溢出
+    {
+     return BigData(_value - bigdata._value);
+    }
+    else   //结果溢出
+    {
+     return Sub(_pData, bigdata._pData);
+    }
+   }
+   else //第一个为负，第二个为正
+   {
+    if (_value > MIN_INT64 + bigdata._value)//结果不溢出
+    {
+     return BigData(_value - bigdata._value);
+    }
+    else   //结果溢出
+    {
+     return Sub(_pData, bigdata._pData);
+    }
+   }
+  }
+ }
+ else
+ {
+  return Sub(_pData, bigdata._pData);
+ }
+}
+ 
+void _EachAdd0(string& pdate) //各项添加'0'
+{
+ int size = pdate.size();
+ int i = 1;
+ for (i = 1; i < size; i++)
+ {
+  pdate[i] += '0';
+ }
+}
+ 
+void _EachSub0(string& pdate) //各项去'0'
+{
+ int size = pdate.size();
+ int i = 1;
+ for (i = 1; i < size; i++)
+ {
+  pdate[i] -= '0';
+ }
+}
+ 
+BigData BigData:: Add(string pData1, string pData2)
+{
+ //转化为string中从低到高字符相加
+ //若同号 就相加，若异号，转为减
+ 
+ if (pData1[0] != pData2[0])//异号
+ {
+  if (pData1[0] == '+')
+  {
+   pData2[0] = '+';
+   return Sub(pData1, pData2);
+  }
+  else
+  {
+   pData1[0] = '+';
+   return Sub(pData2, pData1);
+  }
+ }
+ else//同号  
+ {
+  //判断哪个位数多，放在前面
+  if (pData1.size() < pData2.size())
+  {
+   swap(pData1, pData2);
+  }
+ 
+  std::string tmp;
+  int size1 = pData1.size();
+  int size2 = pData2.size();
+  int sizet = size1 + 1;
+  int flag = 0;
+  tmp.resize(size1 + 1);
+  tmp[0] = pData1[0];
+ 
+  for (int i = 0; i < size1 - 1; i++)
+  {
+   flag = 0;
+   char cur = '0';
+   if (size2 - 1 - i > 0)
+   {
+    cur = pData2[size2 - 1 - i];
+   }
+   tmp[sizet - i-1] = pData1[size1 - 1 - i] + cur - 2 * '0';//tmp存数值而不是数字字符
+   if (tmp[size1 - i] / 10 == 1)
+   {
+    flag = 1;
+    tmp[size1 - i] %= 10;
+   }
+    
+   pData1[size1 - i - 2] += flag;
+  }
+  tmp[1] = flag;
+  _EachAdd0(tmp);
+ 
+  return BigData(tmp);
+ }
+}
+ 
+ 
+BigData BigData::Sub(string pData1, string pData2)
+{
+ //转化为string中从低到高字符相减
+ //若同号 就相减（注意前后位数不同），若异号，转为加
+ 
+ if (pData1[0] != pData2[0])//异号
+ {
+  if (pData1[0] == '+')
+  {
+   pData2[0] = '+';
+   return Add(pData1, pData2);
+  }
+  else
+  {
+   pData2[0] = '-';
+   return Add(pData1, pData2);
+  }
+ }
+ else  //同号
+ {
+  //取数值的符号，将较大值放在前面
+ 
+  if (pData1.size() < pData2.size() ||
+   (pData1.size() == pData2.size() && (strcmp(pData1.c_str(), pData2.c_str()) < 0)))
+  {
+   if (pData1[0] == '+')
+   {
+    pData2[0] = '-';
+   }
+   else
+   {
+    pData2[0] = '+';
+   }
+   swap(pData1, pData2);   
+  }
+  std::string tmp;
+  int size1 = pData1.size();
+  int size2 = pData2.size();
+  int sizet = size1;
+  int flag = 0;
+  tmp.resize(sizet);
+  tmp[0] = pData1[0];
+  for (int i = 0; i < size1 - 1; i++)
+  {
+   flag = 0;
+   int cur = 0;
+   if (i < size2 - 1)
+   {
+    cur = pData1[size1 - i - 1] - pData2[size2 - i - 1];
+   }
+   else
+   {
+    cur = pData1[size1 - i - 1] - '0';
+   }
+   if (cur < 0)
+   {
+    flag = 1;
+    cur += 10;
+   }
+   tmp[sizet - 1 - i] = cur + '0';
+ 
+   pData1[size1 - 2 - i] -= flag;
+ 
+  }
+  return BigData(tmp);
+ }
+}
+ 
+ 
+BigData BigData:: operator*(const BigData bigdata)
+{
+ //1、都在INT64范围内<运算后在范围内，运算后不在范围内>
+ //   同号与 MAX_DATA比较  异号与MIN_DATA比较
+ //2、至少一个不在范围内
+ if (0 == _value || 0 == bigdata._value)
+ {
+  return BigData(0);
+ }
+ if (!PDataIsOverINT64() && !bigdata.PDataIsOverINT64())
+ {
+  if (_pData[0]==bigdata._pData[0])//同号
+  {
+   if (_value >= 0)//为正
+   {
+    if (_value < MAX_INT64 / bigdata._value)//结果在范围内
+    {
+     return BigData(_value*bigdata._value);
+    }
+    else // 结果不在范围内
+    {
+     return Mul(_pData,bigdata._pData);
+    }
+   }
+   else//为负
+   {
+    if (_value > MAX_INT64 / bigdata._value)//结果在范围内
+    {
+     return BigData(_value*bigdata._value);
+    }
+    else // 结果不在范围内
+    {
+     return Mul(_pData, bigdata._pData);
+    }
+   }
+  }
+  else  //异号
+  {
+   if (_value >= 0)//为正 负
+   {
+    if (_value < MIN_INT64 / bigdata._value)//结果在范围内
+    {
+     return BigData(_value*bigdata._value);
+    }
+    else // 结果不在范围内
+    {
+     return Mul(_pData, bigdata._pData);
+    }
+   }
+   else //为 负 正
+   {
+    if (_value > MIN_INT64 / bigdata._value)//结果在范围内
+    {
+     return BigData(_value*bigdata._value);
+    }
+    else // 结果不在范围内
+    {
+     return Mul(_pData, bigdata._pData);
+    }
+   }
+  }
+ }
+ else
+ {
+  return Mul(_pData, bigdata._pData);
+ }
+}
+ 
+BigData BigData::Mul(string pData1, string pData2)
+{
+ //同号 异号  先大数 后小数  
+ //为提高效率 外层循环次数少，内层次数多
+ 
+ std::string tmp;
+ int size1 = pData1.size();
+ int size2 = pData2.size();
+ int sizet = size1 + size2;
+ tmp.resize(size1 + size2);
+ tmp[0] = '+';
+ if (pData1[0] != pData2[0])//同号 异号 
+ {
+  tmp[0] = '-';
+ }
+ 
+ if (size1 < size2 || (size1 == size2&&strcmp(&pData1[0], pData2.c_str()) < 0))//先大数 后小数
+ {
+  swap(pData1, pData2);
+  swap(size1, size2);
+ }
+ 
+ _EachSub0(pData1);
+ _EachSub0(pData2);
+ //tmp初始化时 全为 0
+ for (int i = 1; i < size2; i++)//小数位数  
+ {
+  if (pData2[size2 - i] == 0)  //若位数上为0则跳过
+  {
+   continue;
+  }
+  for (int j = 1; j < size1; j++)//大数位数
+  {
+   if (pData1[size1 - j] == 0)  //若位数上为0则跳过
+   {
+    continue;
+   }
+   tmp[sizet - j - i + 1] += pData1[size1 - j] * pData2[size2 - i];
+   if (tmp[sizet - j - i + 1]>=10)
+   {
+    tmp[sizet - j - i] += tmp[sizet - j - i + 1] / 10;
+    tmp[sizet - j - i + 1] %= 10;
+   }
+  }
+ 
+ }
+ 
+ for (int i = 0; i < sizet - 1; i++)
+ {
+  if (tmp[sizet - i - 1] >= 10)
+  {
+   tmp[sizet - i - 2] += tmp[sizet - i - 1] / 10;
+   tmp[sizet - i - 1] %= 10;
+  }
+ }
+ 
+ _EachAdd0(tmp);
+ return BigData(tmp);
+}
+ 
+BigData BigData:: operator/(const BigData bigdata)
+{
+ //1、排除除数为0
+ //2、在范围内，不在范围内
+ //3、不在范围内<左（被除数）比右（除数）小为0，左比右大>
+ //4、正负
+ 
+ if (0 == bigdata._value)
+ {
+  assert(false);
+ }
+ 
+ if (!PDataIsOverINT64() && !bigdata.PDataIsOverINT64())
+ {
+  return BigData(_value / bigdata._value);
+ }
+ else
+ {
+  //左（被除数）比右（除数）小为0
+  if (_pData.size() < bigdata._pData.size() ||
+   (_pData.size() == bigdata._pData.size() && _pData[0] == bigdata._pData[0]&&
+   strcmp((char*)&_pData[0],(char*)&bigdata._pData[0]) < 0))
+  {
+   return BigData(0);//正0 负0 都记为0 
+  }
+  else //左比右大
+  {
+   return Div(_pData, bigdata._pData);
+  }
+ }
+}
+ 
+ 
+ 
+BigData BigData::Div(string pData1, string pData2)
+{
+ //正负且 参数左大右小
+ char* _trueDiv(char* tp1, char* tmp2, int size, string& cur);
+ 
+ string cur;
+ cur.append(1, '+');
+ if (pData1[0] != pData2[0])
+ {
+  cur[0] = '-';
+ }
+ 
+ char* tmp1 = (char*)malloc(pData1.size());// *tmp2 = (char*)malloc(pData2.size());
+ strcpy(tmp1, &pData1[1]); //strcpy内部实现free(tmp1)
+ char*tmp2 = &pData2[1];
+ int size2 = strlen(tmp2);
+ int sizermd = size2;
+ int excursion = size2;
+ char* rmd = NULL;
+ 
+ while (strlen(tmp1) > strlen(tmp2) || 
+  (strlen(tmp1) == strlen(tmp2) && strcmp(tmp1, tmp2) > 0))//左大于右时，循环
+ {  
+  while (sizermd < size2 || (sizermd == size2&&strncmp(tmp1, tmp2, sizermd)<0))//不够 商0
+  {
+   cur.append(1, '0');
+   sizermd++;
+   ++excursion;
+  }
+ 
+  rmd = _trueDiv(tmp1, tmp2, sizermd, cur);// 16713  31071  
+  sizermd = strlen(rmd);
+   
+  strcat(rmd, &pData1[++excursion]);
+ 
+  tmp1 = rmd;
+  sizermd++;  // 将余数与剩余被除数相接
+ }
+ 
+ return BigData(cur);
+}
+ 
+char* _trueDiv(char* tp1, char* tp2, int size1, string& cur)
+{
+ //只有tp1和 tp2位数相同且比tp2大，或者比tp2多一位的情况
+ int size2 = strlen(tp2);
+ 
+ int i = 0;
+ tp1[size1] = '\0';
+ 
+ char count = 0;
+ int flag = 0;
+ 
+ while (size1 > size2 ||
+  (size1 == size2&&strcmp(tp1, tp2) > 0))//tp1大于tp2
+ {
+  for (i = 0; i < size1; i++)
+  {
+   flag = 0;
+   int count = 0;
+   if (i < size2)
+   {
+    count = tp1[size1 - i - 1] - tp2[size2 - i - 1];
+   }
+   else
+   {
+    count = tp1[size1 - i - 1] - '0';
+   }
+   if (count < 0)
+   {
+    flag = 1;
+    count += 10;
+   }
+   tp1[size1 - 1 - i] = count + '0';
+ 
+   tp1[size1 - 2 - i] -= flag;
+ 
+   while (*tp1 == '0' && size1>1)//可能出现整除情况
+   {
+    tp1++;
+    size1--;
+   }
+ 
+  }
+  count++;
+ }
+ 
+ cur.append(1, count + '0');
+ return tp1;
+}
+ 
+ 
+//<test.cpp>
+ 
+ 
+#include"BIGDATA.h"
+ 
+void test()
+{
+ BigData b0(13215156);
+ BigData b10(-13215156);
+ BigData b11(9787687678661325156);//当传入的数值大于MAX_DATA且位数相等时，编译器不能检测，导致由正转负
+ BigData b12(-9223372036854775807);
+ BigData b1("a13215jfiow");
+ b1.Print();
+ cout << b1<< endl;
+ BigData b2("+000023215");
+ cout << b2 << endl;
+ b2.Print();
+ BigData b3(" 33215jfiow"); //(Tab、空格键消除用isspace（int）)
+ cout << b3 << endl;
+ b3.Print();
+ BigData b4("    -33215jfiow");
+ cout << b4 << endl;
+ b4.Print();
+ BigData b5("43215jfiow");
+ b5.Print();
+ cout << b5 << endl;
+ 
+ //BigData b6("4321537537354373783783");
+ //b6.Print(); 
+ //cout << b6 << endl;
+ BigData b7("-43215378338735373783537");
+ cout << b7 << endl;
+ b7.Print();
+ BigData b8("-9223372036854775808");
+ cout << b8 << endl;
+ b8.Print();
+ BigData b9("-999999");
+ cout << b9 << endl;
+ b9.Print();
+ 
+ BigData b101("43215378338735373783537");
+ BigData b102("-43215378338735373783537");
+ BigData b103("-43215378338735373783537");
+ BigData b110("-43215378338735373783537");
+ 
+ (b2 + b9).Print();
+ cout << (b2 + b9) << endl;
+}
+ 
+void testAdd()
+{
+ BigData b1("-45353");
+ BigData b2("37353753");
+ BigData b3("-9223372036854775808");
+ BigData b4(" 9223372036854775800");
+ BigData b5("-9223372036854775810");
+ BigData b6(" 9223372036854775900");
+ 
+ cout << (b1 + b1) << endl; 
+ cout << (b2 + b2) << endl;
+ cout << (b1 + b2) << endl;
+ cout << (b1 + b4) << endl;
+ 
+ cout << b3 << endl;
+ cout << (b1 + b3) << endl;
+ cout << (b2 + b4) << endl;
+ 
+ cout << (b2 + b5) << endl;
+ cout << (b1 + b6) << endl;
+ cout << (b6 + b1) << endl;
+ 
+}
+ 
+void testSub()
+{
+ BigData b1("-45353");
+ BigData b2("37353753");
+ BigData b3("-9223372036854775808");
+ BigData b4(" 9223372036854775800");
+ BigData b5("-9223372036854775810");
+ BigData b6(" 9223372036854775900");
+ 
+ cout << (b1 - b2) << endl;
+ cout << (b2 - b1) << endl; 
+ cout << (b3 - b1) << endl;
+ cout << (b1 - b4) << endl;
+ cout << (b3 - b2) << endl;
+ cout << (b4 - b1) << endl;
+ cout << (b1 - b3) << endl;
+ cout << (b2 - b4) << endl;
+ cout << endl;
+ 
+ 
+ cout << (b5 - b1) << endl;
+ cout << (b1 - b5) << endl;
+ cout << endl;
+ cout << (b6 - b2) << endl;
+ cout << (b2 - b6) << endl;
+ cout << endl;
+ cout << (b6 - b5) << endl;
+ cout << (b5 - b6) << endl;
+ cout << (b2 - b5) << endl;
+ cout << (b1 - b6) << endl;
+ cout << (b6 - b1) << endl;
+ 
+}
+ 
+ 
+void testMul()
+{
+ BigData b1("-45353");
+ BigData b2("37353753");
+ BigData b3("-9223372036854775808");
+ BigData b4(" 9223372036854775800");
+ BigData b5("-9223372036854775810");
+ BigData b6(" 9223372036854775900");
+ 
+ cout << (BigData("999") * BigData("22222222222222222222222222222")) << endl;
+ 
+ cout << (b2 * b1) << endl;
+ cout << (b1 * b2) << endl;
+ cout << (b1 * BigData(0)) << endl;
+ cout << (BigData(0) * b2) << endl;
+ cout << endl;
+ cout << (b3 * b1) << endl;
+ cout << (b1 * b3) << endl;
+ cout << (b1 * b4) << endl;
+ cout << (b4 * b1) << endl;
+ cout << (b3 * b2) << endl;
+ cout << (b2 * b4) << endl;
+ cout << endl;
+ 
+ 
+ cout << (BigData(0) * b6) << endl;
+ cout << (b5 * BigData(0)) << endl;
+ cout << (b5 * b1) << endl;
+ cout << (b1* b5) << endl;
+ cout << endl;
+ cout << (b6 * b2) << endl;
+ cout << (b2 * b6) << endl;
+ cout << endl;
+ cout << (b6 * b5) << endl;
+ cout << (b5 * b6) << endl;
+ cout << (b2 * b5) << endl;
+ cout << endl;
+ cout << (b1 * b6) << endl;
+ cout << (b6 * b1) << endl;
+ BigData b7("-203367738338252");
+ cout << b7*b1 << endl;
+}
+ 
+ 
+void testDiv()
+{
+ BigData b1("-45353");
+ BigData b2("37353753");
+ BigData b3("-9223372036854775808");
+ BigData b4(" 9223372036854775800");
+ BigData b5("-9223372036854775810");
+ BigData b6(" 9223372036854775900");
+ BigData b7("-1231123203367738338252");
+ 
+ 
+ //1、排除除数为0
+ //cout << (b1 / BigData(0)) << endl;
+ 
+ //2、在范围内
+ 
+ cout << (b1 / b2) << endl;
+ cout << (b2 / b1) << endl;
+ 
+ 
+ //3、不在范围内<左（被除数）比右（除数）小为0，左比右大>
+ cout << (b2 / b5) << endl;
+ cout << (b2 / b6) << endl;
+ 
+ cout << (b5 / b2) << endl;
+ cout << (b6 / b2) << endl;
+ cout << (b6 / b1) << endl;
+ cout << (b5 / b1) << endl;
+ 
+ cout << b7 / b1 << endl;
+}
+ 
+int main()
+{
+ //testAdd();
+ //testSub();
+ //testMul();
+ testDiv();
+ system("pause");
+ return 0;
+}
+ 如何修改一个类的私有成员？
+先看有无修改类成员变量的接口（函数），通过接口（函数）进行修改。
+再看是否已知类的结构（成员变量的类型）（必须考虑内存对齐）->可以通过指针进行修改
+class Ctest
+{
+    int a;
+    float b;
+}     
+ 
+Ctest test;     
+int* pa=&test;
+*pa=50;     
+float *pb=(float*)((int)&test + sizeof(int))
+*pb=100.0f;
+int main()
+{
+    int arr[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+    my_memmove(arr + 5, arr + 2, 12);
+    int i = 0;
+    for (i = 0; i < 10; i++)
+    {
+        printf("%d\n", arr[i]);
+    }
+    system("pause");
+    return 0;
+}
+一个类如何只创建一个对象？
+***************当存在多个线程时也可能创建2个：：：-》让线程同步（加锁：：解锁）
+class lcass
+{
+private:
+ lcass()
+ {
+  cout << "构造函数" << endl;
+ }
+ 
+ ~lcass()
+ {
+  cout << "析构函数" << endl;
+ 
+ }
+ 
+public:
+ 
+ static lcass* Creat()
+ {
+  if (NULL == mp)
+  {
+   //加锁
+   if (NULL == mp)
+   {
+    mp = new lcass;
+   }
+   //解锁
+  }
+  return mp;
+ }
+ 
+ static lcass* Delete()
+ {
+  if (NULL != mp)
+  {
+   delete mp;
+   mp = NULL;
+  }
+  return mp;
+ }
+private:
+ static lcass* mp;
+ 
+};
+ 
+lcass* lcass::mp;
+void test4()
+{
+ {
+  lcass* L;
+  L = lcass::Creat();
+ 
+  lcass* M;
+  M = lcass::Creat();
+ 
+  M = lcass::Delete();
+ }
+}
+//bug    last line can not swap with n-1
+//http://www.zhihu.com/question/22547591/
+ #include<iostream>
+using namespace std;
+  int ii=0;
+int Find( char x,int size,int zeroIndex)
+{
+    switch (x)
+    {
+    case 's': //上移 就是找到零下面的那个数字的位置 也就是序号增加一行 也就是+4
+        {
+        if ( zeroIndex<size - 4)
+        {
+            return zeroIndex + 4;
+        }
+        }
+        break;
+    case 'x': //下移
+        {
+//        if (zeroIndex<size-4 && zeroIndex>3)
+        if (  zeroIndex>3)
+        {
+            return zeroIndex - 4;
+        }
+        }
+        break;
+    case 'c': 
+        {
+        if ( zeroIndex%4!=0 )
+        {
+            return zeroIndex - 1;
+        }
+        }
+        break;
+    case 'z':  //左移 主要是判断空白是否在右边缘
+        {
+        if (zeroIndex%4!=3)
+        {
+            return zeroIndex + 1;
+        }
+        }
+        break;
+    default:
+        break;
+    }   
+    return -1;
+}
+ 
+ 
+//交换数组中zero和next的位置
+void SwapIndex(int *ary,int zero, int next)
+{
+    if (-1 == next)
+    {
+        return ;
+    }
+    int t = ary[zero];
+    ary[zero] = ary[next];
+    ary[next] = t; 
+}
+ 
+void Update(int *ary, int size,char com)
+{
+    int zeroIndex = 0; //零的序号
+    for (int i = 0.; i< size ; i++)
+    {
+        if (ary[i] == 0)
+        {
+            zeroIndex = i;
+            break;
+        }
+    }
+     
+    int nextIndex = Find(com,size,zeroIndex); //获取跟零相邻(根据com不同 取上下左右)的那个数字的序号
+    SwapIndex(ary,zeroIndex,nextIndex);
+ 
+}
+ 
+void Show(int *ary, int size)
+{  ii++;
+    for (int i  = 0 ; i <size; i++)
+    {
+        if(i % 4 == 0) //假设每行4个数字
+        {
+            cout<<endl<<endl;
+        }
+        if (ary[i]!=0)
+        {
+        cout<<"\t"<<ary[i];
+        }
+        else
+        {
+            cout<<"\t";
+        }
+    }
+    //cout<<endl<<"请输入方向(1234):";
+   cout<<endl<<"  "<<ii<<endl<<"请输入方向(sxzc):";
+}
+ 
+bool ProcessCommand(int *ary, int size,  char com)
+{
+   //    system("cls");
+    Update(ary,size,com); //更新地图
+    Show(ary,size); //显示新的地图
+    return true;
+}
+ 
+ 
+char GetCommand() //假设只返回4个值 代表四个方向
+{
+//int test = 1;
+char  test='s';
+cin>>test;//先测试一下
+return test;
+}
+ 
+ 
+void Process(int *ary, int size)
+{
+   /// int com = 0;
+   char  com='s';
+    while(ProcessCommand(ary,size,com))
+    {
+         com = GetCommand();    
+    }
+ 
+}
+ 
+ 
+int pintu()
+{
+    int ary[16]; //数字0 代表空白
+    for (int i=0;i<16; i++)
+    {
+        ary[i] = i;
+    }
+    Process(ary,16);
+    return 0;
+}
+
+template<class Entry>  
+struct Binary_node  
+{  
+    Entry data;  
+    Binary_node<Entry>* left;  
+    Binary_node<Entry>* right;  
+    Binary_node();  
+    Binary_node(const Entry &x);  
+};  
+
+///////////////////////////////////////
+template<class Entry>  
+class Binary_tree  
+{  
+public:  
+    Binary_tree():root(NULL){};  
+    ~Binary_tree();  
+/*  Binary_tree();*/  
+    bool empty() const;  
+    void preorder(void (*visit)(Entry &));  
+    void inorder(void (*visit)(Entry &));  
+    void postorder(void (*visit)(Entry &));  
+    //Binary_tree大小  
+    int size() const;  
+    int height() const;  
+    void clear();  
+    void insert(const Entry& x);  
+    void reverse();  
+    Binary_tree(const Binary_tree<Entry>&original);  
+    Binary_tree & operator=(const Binary_tree<Entry>&original);  
+    const Binary_node<Entry>* get_root() const;  
+    //一些递归辅助函数  
+private:      
+    int recursive_size(const Binary_node<Entry>*root) const;  
+    int recursive_height(const Binary_node<Entry>*root) const;  
+    void equal(Binary_node<Entry>*&sub_root,const Binary_node<Entry>*orig_node);  
+    void recursive_reverse(Binary_node<Entry> * & sub_root);  
+    void recursive_clear(Binary_node<Entry> * & sub_root);  
+    void recursive_insert(Binary_node<Entry> * & sub_root, const Entry& x);  
+    void recursive_inorder(Binary_node<Entry> * sub_root, void (*visit)(Entry &));  
+    void recursive_preorder(Binary_node<Entry> * sub_root, void (*visit)(Entry &));  
+    void recursive_postorder(Binary_node<Entry> * sub_root, void (*visit)(Entry &));  
+protected:  
+    Binary_node<Entry>* root;  
+ 
+};
+////////////////////////////////////////////  
+
+#ifndef BINARY_TREE_CPP_X  
+#define BINARY_TREE_CPP_X  
+//#include "Binary_tree.h"  
+//结点构造函数  
+template<class Entry>  
+Binary_node<Entry>::Binary_node()  
+{  
+    left = right = NULL;  
+}  
+template<class Entry>  
+Binary_node<Entry>::Binary_node(const Entry &x)  
+{  
+    left = right = NULL;  
+    data = x;  
+}  
+template<class Entry>  
+Binary_tree<Entry>::Binary_tree(const Binary_tree<Entry>&original)  
+{  
+    root = original.get_root();  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_inorder(Binary_node<Entry>*sub_root, void(*visit)(Entry&))  
+{//中序遍历的递归函数  
+    if(sub_root!=NULL)  
+    {  
+        recursive_inorder(sub_root->left, visit);  
+        (*visit)(sub_root->data);  
+        recursive_inorder(sub_root->right, visit);  
+    }  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::inorder(void (*visit)(Entry&))  
+{//中序遍历  
+    recursive_inorder(root, visit);  
+}  
+ 
+template<class Entry>  
+void Binary_tree<Entry>::recursive_postorder(Binary_node<Entry>*sub_root, void (*visit)(Entry&))  
+{//后序遍历的递归函数  
+    if (sub_root!=NULL)  
+    {  
+        recursive_postorder(sub_root->left, visit);  
+        recursive_postorder(sub_root->right, visit);  
+        (*visit)(sub_root->data);  
+    }  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::postorder(void (*visit)(Entry&))  
+{//后序遍历  
+    recursive_postorder(root, visit);  
+}  
+ 
+template<class Entry>  
+void Binary_tree<Entry>::recursive_preorder(Binary_node<Entry>*sub_root, void (*visit)(Entry&))  
+{//先序遍历的递归函数  
+    if (sub_root!=NULL)  
+    {  
+        (*visit)(sub_root->data);  
+        recursive_preorder(sub_root->left, visit);  
+        recursive_preorder(sub_root->right, visit);  
+    }  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::preorder(void (*visit)(Entry&))  
+{//先序遍历  
+    recursive_preorder(root, visit);  
+}  
+ 
+//return tree height, if only one node then return 1  
+template<class Entry>  
+int Binary_tree<Entry>::height() const  
+{  
+    return recursive_height(root);  
+}  
+#define max MAX  
+template<class Comparable>  
+Comparable MAX(const Comparable& a, const Comparable& b)  
+{  
+    return a > b ? a : b;  
+}  
+template<class Entry>  
+int Binary_tree<Entry>::recursive_height(const Binary_node<Entry>*root) const  
+{  
+    if(root == NULL)  
+        return 0;  
+    else  
+        return 1 + max(recursive_height(root->left) , recursive_height(root->right)) ;  
+}  
+#undef max  
+ 
+//return the size of tree  
+template<class Entry>  
+int Binary_tree<Entry>::size() const  
+{  
+    return recursive_size(root);  
+}  
+template<class Entry>  
+int Binary_tree<Entry>::recursive_size(const Binary_node<Entry>*root) const  
+{  
+    if(root == NULL)  
+        return 0;  
+    else  
+        return 1 + recursive_size(root->left) + recursive_size(root->right) ;  
+}  
+//the tree is empty ?  
+template<class Entry>  
+bool Binary_tree<Entry>::empty() const  
+{  
+    return root == NULL;  
+}  
+//insert x to the tree  
+template<class Entry>  
+void Binary_tree<Entry>::insert(const Entry& x)  
+{  
+    recursive_insert(root, x);  
+}  
+//the recursive function of insert,  
+//insert x in the less height side,  
+//if both sides are same height then insert to the left  
+//第一个参数必须使用引用否则插入失败,而其他不涉及数据改动的函数则不需要  
+//引用传参时不会发生值拷贝,如果不加引用,会先在函数的栈空间拷贝一个root,但当函数  
+//结束时这个拷贝就会被销毁,所以会导致插入失败  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_insert(Binary_node<Entry>*&sub_root, const Entry& x)  
+{  
+    if(sub_root == NULL)  
+    {  
+        Binary_node<Entry>* ins_data = new Binary_node<Entry>(x);  
+        sub_root = ins_data;  
+        return;  
+    }  
+    else  
+    {  
+        if(recursive_height(sub_root->left) > recursive_height(sub_root->right))  
+            recursive_insert(sub_root->right, x);  
+        else  
+            recursive_insert(sub_root->left, x);  
+    }  
+}  
+//destuctor  
+template<class Entry>  
+Binary_tree<Entry>::~Binary_tree()  
+{  
+    clear();  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::clear()  
+{  
+    recursive_clear(root);  
+}  
+//recursive function for destroy tree  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_clear(Binary_node<Entry>*&sub_root)  
+{//两个版本都OK  
+#if 0  
+    if(sub_root != NULL)  
+    {  
+        recursive_clear(sub_root->left);  
+        recursive_clear(sub_root->right);  
+        delete sub_root;  
+        sub_root = NULL;  
+    }  
+#else  
+    if(sub_root->left!=NULL)  
+        recursive_clear(sub_root->left);  
+    if(sub_root->right!=NULL)  
+        recursive_clear(sub_root->right);  
+    delete sub_root;  
+    sub_root = NULL;  
+#endif  
+}  
+//get the root  
+template<class Entry>  
+const Binary_node<Entry>* Binary_tree<Entry>::get_root() const  
+{  
+    return root;  
+}  
+//deep copy  
+template<class Entry>  
+Binary_tree<Entry>& Binary_tree<Entry>::operator =(const Binary_tree<Entry>&original)  
+{  
+    equal(root, original.get_root());  
+    return *this;  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::equal(Binary_node<Entry>*&sub_root,const Binary_node<Entry>*orig_node)  
+{  
+    if(empty())  
+        sub_root = new Binary_node<Entry>(orig_node->data);  
+    if(orig_node->left!=NULL)  
+    {  
+        sub_root->left = new Binary_node<Entry>(orig_node->left->data);  
+        equal(root->left, orig_node->left);  
+    }  
+    if(orig_node->right!=NULL)  
+    {  
+        sub_root->right = new Binary_node<Entry>(orig_node->right->data);  
+        equal(root->right, orig_node->right);  
+    }  
+}  
+//reverse the binary tree,  exchange left and right  
+template<class Entry>  
+void Binary_tree<Entry>::reverse()  
+{  
+    recursive_reverse(root);  
+}  
+template<class Entry>  
+void Binary_tree<Entry>::recursive_reverse(Binary_node<Entry> * & sub_root)  
+{  
+    if(sub_root!=NULL)  
+    {  
+        Binary_node<Entry>* temp = NULL;  
+        temp = sub_root->left;  
+        sub_root->left = sub_root->right;  
+        sub_root->right = temp;  
+        recursive_reverse(sub_root->left);  
+        recursive_reverse(sub_root->right);  
+    }  
+}  
+#endif  
+
+/////////////////////////////////////////////////
+#include <iostream>  
+// #include "Binary_tree.h"  
+using namespace std;  
+void print( int& x);  
+int main()  
+{  
+    Binary_tree<int> dd;  
+    dd.insert(3);  
+    dd.insert(2);  
+    dd.insert(5);  
+    dd.insert(8);  
+    dd.insert(9);  
+    dd.insert(1);  
+    Binary_tree<int> ww;  
+    ww = dd;  
+    ww.insert(10);  
+    ww.insert(7);  
+    cout<<"preorder:";  
+    dd.preorder(print);  
+    cout<<endl;  
+    cout<<"preorder:";  
+    ww.preorder(print);  
+    cout<<endl;  
+    dd.reverse();  
+    cout<<"preorder:";  
+    dd.preorder(print);  
+    cout<<endl;    
+    //system("pause");  
+    return 0;  
+}  
+void print( int& x)  
+{  
+    cout<<x<<" ";  
+}  
+//#include"wz.h"
+void InsertSort(int r[], int n)
+{int i,j,k;
+    for (  i=2; i<n; i++)
+	{  r[0]=r[i];                        //设置哨兵
+	  for ( j=i-1; r[0]<r[j]; j--)       //寻找插入位置
+	        r[j+1]=r[j];                 //记录后移
+	  r[j+1]=r[0];                 
+	}
+	for(  k=1;k<n;k++)
+       cout<<r[k]<<" ";	  
+	cout<<"\n";
+}
+//希尔排序
+void ShellSort(int r[], int n)
+{ int i, j,d;
+    for (d=n/2; d>=1; d=d/2)            //以增量为d进行直接插入排序
+	{  for (i=d+1; i<n; i++)   
+	   { r[0]=r[i];                 //暂存被插入记录
+               for (j=i-d; j>0 && r[0]<r[j]; j=j-d)
+                     r[j+d]=r[j];       //记录后移d个位置
+                          r[j+d]=r[0];
+		 }
+	}
+   for(i=1;i<n;i++)
+       cout<<r[i]<<" ";
+   cout<<"\n";
+}
+
+//起泡排序
+void BubbleSort(int r[], int n)
+{ int temp,exchange,bound,i,j; exchange=n-1;  //第一趟起泡排序的范围是r[0]到r[n-1]	
+	while (exchange)                    //仅当上一趟排序有记录交换才进行本趟排序
+	{ bound=exchange;  exchange=0;  
+	    for (  j=0; j<bound; j++)     //一趟起泡排序
+	    if (r[j]>r[j+1]) 
+		{ temp=r[j]; r[j]=r[j+1]; r[j+1]=temp;
+		  exchange=j;                   //记录每一次发生记录交换的位置
+	   }
+	}
+	for(  i=0;i<n;i++)
+       cout<<r[i]<<" ";
+	cout<<"\n";
+}
+
+
+//快速排序一次划分
+int Partition(int r[], int first, int end)
+{ int i=first,j=end,temp;                        //初始化      
+   while (i<j)	
+	 {  
+       while (i<j && r[i]<= r[j])
+			j--;                        //右侧扫描
+       if (i<j)
+	   {  temp=r[i];  r[i]=r[j];  r[j]=temp;              //将较小记录交换到前面
+	        i++; 
+	   }
+       while (i<j && r[i]<= r[j]) 
+		   i++;                         //左侧扫描
+           if (i<j)
+		   {
+              temp=r[j];
+	          r[j]=r[i];
+	          r[i]=temp;                //将较大记录交换到后面
+               j--; 
+		   }
+	}
+    return i;                           //i为轴值记录的最终位置
+}
+
+//快速排序
+void QuickSort(int r[], int first, int end)
+{
+    if (first<end) 
+	{                                   //递归结束
+           int pivot=Partition(r, first, end);  //一次划分
+           QuickSort(r, first, pivot-1);//递归地对左侧子序列进行快速排序
+           QuickSort(r, pivot+1, end);  //递归地对右侧子序列进行快速排序
+	}
+
+}
+
+//简单选择排序
+void SelectSort(int r[ ], int n)
+{  int  i, j, index, temp;
+    for (i=0; i<n-1; i++)  	            //对n个记录进行n-1趟简单选择排序
+	{   index=i; 		
+       for (j=i+1; j<n; j++) if (r[j]<r[index]) index=j;   //在无序区中选取最小记录	    
+       if (index!=i) {  temp=r[i];  r[i]=r[index]; r[index]=temp;}
+	}
+    for(i=0;i<n;i++)
+        cout<<r[i]<<" ";
+    cout<<"\n";
+}
+
+
+//筛选法调整堆
+void Sift(int r[], int k, int m)
+{ int i; int j; int temp;  i=k;  j=2*i+1;     //置i为要筛的结点，j为i的左孩子
+  while (j<=m)                          //筛选还没有进行到叶子
+  {
+      if (j<m && r[j]<r[j+1])    j++;                          //比较i的左右孩子，j为较大者
+      if (r[i]>r[j]) break;             //根结点已经大于左右孩子中的较大者
+      else 
+	  {
+           temp=r[i];  r[i]=r[j];  r[j]=temp;        //将根结点与结点j交换
+           i=j;  j=2*i+1;                     //被筛结点位于原来结点j的位置
+	 }
+  }
+}
+//堆排序
+void HeapSort(int r[ ], int n)
+{  int i; int temp;
+  for (i=n/2; i>=0; i--)                //初始建堆，从最后一个非终端结点至根结点
+     Sift(r, i, n) ;     
+   for (i=n-1; i>0; i--)                //重复执行移走堆顶及重建堆的操作
+   {   temp=r[i]; r[i]=r[0];  r[0]=temp;
+      Sift(r, 0, i-1);
+   }
+   for(i=0;i<n;i++)
+      cout<<r[i]<<" ";
+   cout<<"\n";
+}
+//一次归并
+void Merge(int r[], int r1[], int s, int m, int t)
+{ int i=s; int j=m+1; int k=s;
+     while (i<=m && j<=t)
+	 {   
+         if (r[i]<=r[j])  r1[k++]=r[i++];            //取r[i]和r[j]中较小者放入r1[k]
+         else             r1[k++]=r[j++]; 
+	 }
+      if (i<=m)   while (i<=m)r1[k++]=r[i++];   //若第一个子序列没处理完，则进行收尾处理         
+      else   while (j<=t)    r1[k++]=r[j++];     //若第二个子序列没处理完，则进行收尾处理       
+}
+
+
+//一趟归并
+void MergePass(int r[ ], int r1[ ], int n, int h)
+{
+	int i=0;
+	int k;
+
+   while (i<=n-2*h)                     //待归并记录至少有两个长度为h的子序列
+   {
+     Merge(r, r1, i, i+h-1, i+2*h-1);
+        i+=2*h;
+   }
+   if (i<n-h) 
+	   Merge(r, r1, i, i+h-1, n);       //待归并序列中有一个长度小于h
+   else for (k=i; k<=n; k++)            //待归并序列中只剩一个子序列
+        r1[k]=r[k];
+}
+
+//归并排序的非递归算法
+void MergeSort1(int r[ ], int r1[ ], int n )
+{  int h=1;
+  int i;
+  while (h<n)
+  {
+    MergePass(r, r1, n-1, h);           //归并
+    h=2*h;
+    MergePass(r1, r, n-1, h);
+    h=2*h;
+  }
+  for(i=0;i<n;i++)
+      cout<<r[i]<<" ";
+  cout<<"\n";
+}
+
+//归并排序的递归算法
+void MergeSort2(int r[], int r1[], int r2[],int s, int t)
+{       int m;
+	if (s==t) 
+	{
+		r1[s]=r[s];
+
+	}
+    else 
+	{ 
+            m=(s+t)/2;
+            MergeSort2(r, r2, r1, s, m);        //归并排序前半个子序列		
+            MergeSort2(r, r2, r1, m+1, t);      //归并排序后半个子序列
+            Merge(r2, r1, s, m, t);             //将两个已排序的子序列归并 		
+	}	 
+}
+
+int fun1()
+{
+    int i,j,k;
+  const int numv=11;                                //赋值
+  int a[]={0,3,56,32,78,5,24,9,64,34,7};
+  int b[]={0,4,6,23,45,15,10,36,25,79,21};
+  int c[]={38,23,56,2,79,42,93,29,6,5,57};
+  int d[]={50,23,45,67,87,14,29,32,44,97,89};
+  int e[]={8,6,1,48,37,63,39,74,52,26,49};
+  int f[]={12,23,45,87,2,6,15,43,26,40,44};
+  int g[]={13,10,23,45,64,34,24,7,9,3,16};
+  int h[]={34,23,54,76,12,13,14,11,78,8};
+  int g1[numv];
+  int h1[numv];
+  int h2[numv];  
+
+  cout << "\n直接顺序排序前：" << "\n";
+  for(  j=1;j<numv;j++)
+	  cout<<a[j]<<" ";
+  cout << "\n直接顺序排序结果为：" << "\n";
+  InsertSort(a,numv);  
+
+  cout << "\n希尔排序前：" << "\n";
+  for(j=1;j<numv;j++)
+	  cout<<b[j]<<" ";
+  cout << "\n希尔排序结果为：" << "\n";
+  ShellSort(b, numv);
+  
+  cout << "\n起泡排序前：" << "\n";
+  for(  k=0;k<numv;k++)
+	  cout<<c[k]<<" ";
+  cout << "\n起泡排序结果为：" << "\n";
+  BubbleSort(c, numv);
+
+  cout << "\n快速排序前：" << "\n";
+  for(j=0;j<numv;j++)
+	  cout<<d[j]<<" ";
+  cout << "\n快速排序结果为：" << "\n";
+  QuickSort(d,0,numv-1);  
+  for(  i=0;i<numv;i++)
+     cout<<d[i]<<" ";
+  cout<<"\n";
+
+  cout << "\n简单选择排序前：" << "\n";
+  for(j=0;j<numv;j++)
+	  cout<<e[j]<<" ";
+  cout << "\n简单选择排序结果为：" << "\n";
+  SelectSort(e,numv);
+
+  cout << "\n堆排序前：" << "\n";
+  for(j=0;j<numv;j++)
+	  cout<<f[j]<<" ";
+  cout << "\n堆排序结果为：" << "\n";
+  HeapSort(f, numv);
+
+  cout << "\n归并排序非递归算法前：" << "\n";
+  for(j=0;j<numv;j++)
+	  cout<<g[j]<<" ";
+  cout << "\n归并排序非递归算法的结果为：" << "\n";
+  MergeSort1(g, g1,numv );
+
+  cout << "\n归并排序递归算法前：" << "\n";
+  for(j=0;j<numv;j++)
+	  cout<<h[j]<<" ";
+  cout << "\n归并排序递归算法的结果为：" << "\n";
+  MergeSort2(h,h1,h2, 0, numv-1);
+  for(i=0; i < numv; i++)
+       cout<<h1[i]<<" ";
+  cout<<"\n";
+
+  return 0;
+}
+#include"wz.h"
+ 
+struct ArcNode                   //定义边表结点
+{
+  int adjvex;                    //邻接点域
+  ArcNode *next;                 //指向下一个边结点的指针
+};
+template <class T>
+struct VertexNode               //定义顶点表结点
+{
+  T vertex;                     //顶点的名称
+  ArcNode *firstedge;           //边表的头指针
+};
+template <class T>
+class ALGraph
+{
+public:
+   ALGraph(T a[ ], int n, int e);   //构造函数，初始化一个有n个顶点e条边的图
+   ~ALGraph();                      //析构函数，释放邻接表中各边表结点的存储空间
+   T GetVex(int i);                 //取图中第i个顶点数据信息
+   void PutVex(int i, T value);     //将图中第i个顶点的数据域置为value
+   void InsertVex(int i, T value);  //在图中插入一个顶点，其编号为i，值为value
+   void DeleteVex(int i);           //删除图中第i个顶点
+   void InsertArc(int i, int j);    //在图中插入一条边，其依附的两个顶点的编号为i和j
+   void DeleteArc(int i, int j);    //在图中删除一条边，其依附的两个顶点的编号为i和j
+   void DFSTraverse(int v);         //深度优先遍历图
+   void BFSTraverse(int v);         //广度优先遍历图
+private:
+   VertexNode<T> adjlist[MaxSize];  //存放顶点表的数组
+   int vertexNum, arcNum;           //图的顶点数和边数
+};
+ 
+template <class T>
+ALGraph<T>::ALGraph(T a[ ], int n, int e)
+{
+    arcNum = e;                             //边数
+	vertexNum=n;                            //顶点数
+    int i,j;
+	for (i=0; i<vertexNum; i++)
+	{  
+       VertexNode<T> tempvertex;
+	   tempvertex.vertex = a[i];
+	   tempvertex.firstedge = NULL;
+	   adjlist[i] = tempvertex;
+	}	
+	for (int k=0; k<arcNum; k++)           //依次输入每一条边，并在相应边表中插入结点
+    { 
+		cout<<"请输入边所依附的两个顶点的序号";
+		cin>>i>>j;                         //输入边所依附的两个顶点的序号
+        ArcNode *s=new ArcNode; s->adjvex=j;  //生成一个边表结点s
+	    s->next=adjlist[i].firstedge;      //将结点s插入到结点i的边表的表头  
+        adjlist[i].firstedge=s;
+	}
+	InsertArc(0,1);                   //插入边
+	InsertArc(0,2);
+	InsertArc(0,3);
+	InsertArc(1,3);
+	InsertArc(1,4);
+	InsertArc(2,0);
+	InsertArc(2,4);
+	InsertArc(3,1);
+	InsertArc(3,4);
+	InsertArc(4,2);
+	InsertArc(4,3);
+}
+template <class T>
+ALGraph<T>::~ALGraph( )
+{
+  for (int i=0; i<vertexNum; i++)
+  {
+    ArcNode * p=adjlist[i].firstedge;
+	while (p!=NULL)                                              //循环删除
+	{
+	  adjlist[i].firstedge=p->next;
+	  delete p;                                                 //释放结点空间
+      p=adjlist[i].firstedge;
+	}
+  }
+}
+ 
+template <class T>
+T ALGraph<T>::GetVex(int i)
+{
+	if ( i>vertexNum || i<0 ) throw "输入顶点的位置不正确"; //顶点i不存在则抛出异常
+	return adjlist[i].vertex;                               //返回第i个顶点的数据域  
+}
+
+ 
+template <class T>
+void ALGraph<T>::PutVex(int i, T value)
+{
+	if ( i>vertexNum || i<0 ) throw "输入顶点的位置不正确"; //顶点i不存在则抛出异常
+	adjlist[i].vertex = value;                              //第i个顶点的数据域置为value
+}
+ 
+template <class T>
+void ALGraph<T>::InsertVex(int i, T value)
+{
+	if ( i>vertexNum || i<0 || i>MaxSize ) throw "输入顶点的位置不正确"; //顶点i不存在则抛出异常
+	vertexNum++;                                            //顶点数加1
+	VertexNode<T> tempvertex;
+	tempvertex.vertex = value;
+	tempvertex.firstedge = NULL;
+	adjlist[i] = tempvertex;  	                    //第i个顶点的数据域置为value	
+}
+ 
+template <class T>
+void ALGraph<T>::DeleteVex(int i)
+{
+	if ( i<0 || i>MaxSize) throw "位置";       //顶点输入错误则抛出异常
+	int k;	
+	for ( k=0; k<vertexNum; k++)               //删掉入度边
+	   if(k!=i)	 DeleteArc(k, i);
+	ArcNode *s;                                //生成一个边表结点s
+	if( adjlist[i].firstedge != NULL)
+	{
+		ArcNode *s;                         
+		s=adjlist[i].firstedge->next;    
+		while(s!=NULL)
+		{
+			ArcNode *p;                      
+			p = s;
+			adjlist[i].firstedge->next = s->next;
+			s=s->next;
+			delete p;                        //删除p结点
+		}
+		s=adjlist[i].firstedge;
+		adjlist[i].firstedge=NULL;
+		delete s;
+	}
+	for (k=i; k<vertexNum; k++)
+	{ 		
+	   adjlist[k]=adjlist[k+1];             //存储顶点信息       
+	} 
+   vertexNum--;                             //顶点数减1
+   for (k=0; k<vertexNum; k++)
+	if( adjlist[k].firstedge != NULL )
+	{
+		s=adjlist[k].firstedge;                //将结点s插入到结点i的边表的表头
+		while(s!=NULL)
+		{
+			if(s->adjvex > i)                  //搜索i结点
+				s->adjvex--;
+			s = s->next;		
+		}			
+	}
+}
+ 
+template <class T>
+void ALGraph<T>::InsertArc(int i, int j)
+{
+	if ( i>MaxSize || j>MaxSize) throw "位置";//顶点输入错误则抛出异常
+	ArcNode *s=new ArcNode; s->adjvex=j;      //生成一个边表结点s
+	s->next=adjlist[i].firstedge;             //将结点s插入到结点i的边表的表头  
+    adjlist[i].firstedge=s;	
+} 
+ 
+template <class T>
+void ALGraph<T>::DeleteArc(int i, int j)
+{
+	if ( i>MaxSize||  j>MaxSize) throw "位置";  //顶点输入错误则抛出异常
+	ArcNode *s;                                 
+	ArcNode *tempnode;
+	s = adjlist[i].firstedge;
+	tempnode = adjlist[i].firstedge;
+	while(s!=NULL && s->adjvex!=j)
+	{
+		tempnode = s;
+		s = s->next;
+	}
+	if(s!=NULL)
+	{
+		tempnode->next = s->next;
+		delete s;
+	}	
+}
+ 
+template <class T>
+void ALGraph<T>::DFSTraverse(int v)
+{
+	if ( v>vertexNum) throw "位置";                          //顶点输入错误则抛出异常
+	ArcNode * p;                                             
+	int j;
+	cout<<adjlist[v].vertex<<" ";  
+	visited[v]=1;
+    p=adjlist[v].firstedge;    
+   while (p)                                                //依次搜索顶点v的邻接点j
+   {
+      j=p->adjvex;
+      if (visited[j]==0) DFSTraverse(j);
+	  p=p->next;           
+   }
+} 
+template <class T>
+void ALGraph<T>::BFSTraverse(int v)
+{
+  if ( v>vertexNum) throw "位置";                           //顶点输入错误则抛出异常
+  int front,rear,j;
+  ArcNode * p;                                              //生成一个边表结点p
+  int Q[MaxSize];
+  front=rear=-1;                                            //初始化队列, 假设队列采用顺序存储且不会发生溢出
+  cout<<adjlist[v].vertex<<" ";  visited[v]=1; Q[++rear]=v; //被访问顶点入队
+  while (front!=rear)
+  {
+     v=Q[++front];
+     p=adjlist[v].firstedge;                                //边表中的工作指针p初始化
+     while (p) 
+	 {
+       j= p->adjvex;
+       if (visited[j]==0) {
+          cout<<adjlist[j].vertex<<" "; visited[j]=1;Q[++rear]=j;
+     }
+     p=p->next;
+	}
+  }
+}
+ 
+int visited[MaxSize];
+
+int test1()
+{
+	int which;
+	int j;
+	string name;
+	int choose=1;
+	string a[5] = {"北大","清华","复旦","吉林大学","长春工大"};
+	ALGraph<string> algraphTest( a, 5, 0);        //构造图
+	while ( choose==1 )                                      //控制
+	{
+	  cout << "需要输出顶点信息请按0" << endl;		         //输入所要进行的操作的序号
+	  cout << "需要输出任意一个顶点信息请按1" << endl;
+          cout << "需要插入顶点请按2" << endl;
+          cout << "需要修改顶点请按3" << endl;
+          cout << "需要删除顶点请按4" << endl;      	  
+	  cout << "需要深度优先遍历请按5" << endl;
+	  cout << "需要广度优先遍历请按6" << endl;
+	  cout << "需要退出请按7" << endl;
+      cin >> which;
+      switch( which )                                        //功能选择
+	  {
+		 case 0:
+			 for(j=0;j<5;j++ )
+				cout<<algraphTest.GetVex(j)<<" ";              //输出顶点
+			 cout<<endl; 
+			 break;
+		 case 1:
+			int i;
+			cout<<"请输入顶点："<<endl;
+			cin>>i;
+			try
+			{
+				cout<<algraphTest.GetVex(i)<<endl;              //输出i顶点的数据域
+			}
+		    catch(char* s)
+			{
+			  cout<<s<<endl;
+			}
+		    break;
+	    case 2:                                               //在图中的i位置插入一顶点值为name
+		   cout<<"请输入顶点及名字："<<endl;
+		   cin>>i>>name;
+		   try
+		   {
+			  algraphTest.InsertVex(i, name);					              
+                        
+		   }
+		   catch(char* s)
+		   {
+			  cout<<s<<endl;
+		   }
+		   break;
+		case 3:                                               //修改图中一顶点的值
+		   cout<<"请输入顶点及名字："<<endl;
+		   cin>>i>>name;
+		   try
+		   {
+			   algraphTest.PutVex(i, name);					              
+		   }
+		   catch(char* s)
+		   {
+				cout<<s<<endl;
+		   }
+		   break;
+		case 4:                                               //删除图中一顶点的值
+		   cout<<"请输入顶点："<<endl;
+		   cin>>i;
+		   try
+		   {
+			    algraphTest.DeleteVex(i);					              
+		   }
+		   catch(char* s)
+		   {
+				cout<<s<<endl;
+		   }
+		   break;
+		case 5:                                               //图的深度优先搜索
+		   cout<<"请输入顶点："<<endl;
+		   cin>>i;
+		   cout<<endl<<"从第"<<i<<"个顶点深度优先遍历图"<<endl;
+		   try
+		   {
+				for (int ii=0; ii<MaxSize; ii++) visited[ii] = 0;
+	            algraphTest.DFSTraverse(i);         
+		   }
+		   catch(char* s)
+		   {
+				cout<<s<<endl;
+		   }
+		   break;
+		case 6:                                               //图的广度优先搜索
+		   cout<<"请输入顶点："<<endl;
+		   cin>>i;
+		   cout<<endl<<"从第"<<i<<"个顶点广度优先遍历图"<<endl;
+		   try
+		   {
+				for (int ii=0; ii<MaxSize; ii++) visited[ii] = 0;
+				algraphTest.BFSTraverse(i);					              
+		   }
+		   catch(char*s)
+		   {
+				cout<<s<<endl;
+		   }
+		   break;
+		case 7:                                             //退出
+		   choose=0;
+           break;
+	  }
+   }
+}
+  
+const int MaxSize=12;                     //图中最多顶点个数
+
+
+template <class T>
+class MGraph
+{
+public:
+    MGraph(T a[],int n,int e);             //构造函数，初始化具有n个顶点的图
+    void PutVex();                         //取顶点               
+    void GetVex(int i,T v[MaxSize] );      //取图中第i个顶点数据信息
+    void DeleteVex(int i);                 //删除图中第i个顶点
+    void InsertVex(int num,T value);       //在图中插入一个顶点，其编号为i，值为value
+	void DeleteArc(int i, int j);          //在图中删除一条边，其依附的两个顶点的编号为i和j
+    void InsertArc(int i, int j,int n);    //在图中插入一条边，其依附的两个顶点的编号为i和j
+	void DFSTraverse(int v);               //深度优先遍历图
+	void BFSTraverse(int v);               //广度优先遍历图
+
+private:
+    T  vertex[MaxSize];                    //存放图中顶点的数组
+    int arc[MaxSize][MaxSize];             //存放图中边的数组
+    int vertexNum,arcNum;                  //图的顶点数和边数
+ };
+
+ 
+
+ 
+template <class T>
+MGraph<T>::MGraph(T a[], int n, int e) 
+{
+ vertexNum=n;                 //顶点数
+ arcNum=e;                    //边数
+ int i,j,k;
+for (i=0; i<vertexNum; i++) 
+  vertex[i]=a[i];
+ for (i=0; i<vertexNum; i++)    //初始化邻接矩阵
+	 for (j=0; j<vertexNum; j++)
+     arc[i][j]=0;             
+   for (k=0; k<arcNum; k++)   //依次输入每一条边，并修改邻接矩阵的相应元素
+	   {
+cin>>i>>j;                    //边依附的两个顶点的序号
+arc[i][j]=1;                  //置有边标志
+arc[j][i]=1;    
+       }
+}
+ 
+template <class T>
+void MGraph<T>::PutVex( )           //取所有顶点            
+{                                   //假设源点是第0个顶点，即顶点序号是0
+	int i=0;
+    for(i=0;i<vertexNum;i++)
+	   {                            //输出图中所有的顶点
+          cout<<vertex[i]<<"\n";
+	   }
+}
+ 
+template <class T>
+void MGraph<T>::GetVex(int i,T v[MaxSize])      //取顶点i             
+{                                               //假设源点是第0个顶点，即顶点序号是0
+	v[i]=vertex[i];
+    if (i>vertexNum) throw "位置";              //顶点i不存在则抛出异常
+	else
+		cout<<v[i]<<"\n";                       //返回顶点i	
+}
+ 
+template <class T>
+void MGraph<T>::InsertVex(int num,T name)        //在图中插入一个顶点，其编号为i，值为value
+{                                                //假设源点是第0个顶点，即顶点序号是0
+ if ( num<0|| num>vertexNum) throw "位置";       //如果num输入不正确抛出异常
+ int row;                                        //行
+ int col;                                        //列
+ int numv;                                       //最后一个顶点所在的位置
+	 numv = vertexNum-1;
+ if(num>-1)                                      //num存在
+  vertexNum++;                                   //顶点数加1
+for(int i=numv;i>num-1;i--)                      //i从最后一个顶点的下一个位置开始循环
+	vertex[i]=vertex[i-1];                       //把从num位置的顶点到最后一个顶点均向后移一位
+	vertex[num]=name;                            //把要插入的顶点的值放在num位置上
+ for(row=numv;row>=0;row--)                      //把从num列到最后一列的元素均向下移一列
+  {
+    for(col=numv;col>=num;col--)
+		  arc[row][col+1]=arc[row][col];
+     arc[row][num]=10000;
+  }
+  for(row=numv;row>=num;row--)                   //把从num行到最后一行的元素均向下移一行
+	  for(col=0;col<=numv+1;col++)
+		  arc[row+1][col]=arc[row][col];		
+for(col=0;col<vertexNum;col++)
+		  arc[num][col]=10000;                   //把num位置所在的行、列的值均置为无穷大
+  
+ }
+ 
+template <class T>
+void MGraph<T>::DeleteVex(int pos)              //删除第pos个顶点
+{                                               //假设源点是第0个顶点，即顶点序号是0
+ if ( pos<0||  pos>MaxSize) throw "位置";       //如果pos输入不正确抛出异常
+ int row;                                       //行
+ int col;                                       //列
+ int numv=vertexNum;                            //numv等于顶点数
+  if(pos>-1){                                    //pos存在 
+   for(int i=pos;i<numv-1;i++)
+   vertex[i]=vertex[i+1];                       //把从pos到最后的每个点的位置依次向前移一位
+   vertexNum--;                                 //顶点数减1
+   for(row=0;row<numv;row++)
+   {
+     for(col=pos;col<numv;col++)
+		  arc[row][col]=arc[row][col+1];        //把从pos列到最后一列的元素均向前移一列
+     arc[row][numv-1]=10000;                    //把pos所在的列上的值置为无穷大
+   }
+   for(row=pos;row<numv;row++) 
+	  for(col=0;col<numv;col++)
+		  arc[row][col]=arc[row+1][col];        //把从pos行到最后一行的元素均向上移一行
+  } 
+}
+ 
+template <class T>
+void MGraph<T>::DeleteArc(int n, int w)        //在图中删除一条边，其依附的两个顶点的编号为i和j
+{
+ if ( n>MaxSize||  w>MaxSize) throw "位置";    //如果输入不正确抛出异常
+	 arc[n][w]=arc[w][n]=10000;   
+}
+   
+ 
+template <class T>
+void MGraph<T>::InsertArc(int i, int j,int n)   //在图中插入一条边，其依附的两个顶点的编号为i和j
+{
+  if ( i>MaxSize||  j>MaxSize) throw "位置";   //如果输入不正确抛出异常	
+  arc[i][j]=n;
+  arc[j][i]=n;
+  cout<<"从"<<vertex[i]<<"到"<<vertex[j]<<"的路径长度为："<<arc[i][j]<<"\n"; //输出插入的两顶点之间的路径
+ }  
+int visited[MaxSize];
+template <class T>
+void MGraph<T>::DFSTraverse(int v)     //深度优先遍历图
+{
+	
+	if ( v>vertexNum) throw "位置";   //如果输入不正确抛出异常
+     cout<<vertex[v]<<" ";
+	  visited[v]=1;                    //已访问v顶点	  
+      for (int j=0; j<vertexNum; j++)
+	  {
+		 if (arc[v][j]<10000 && visited[j]==0)
+	       DFSTraverse(j); 
+	  }	 
+}     
+ 
+int visited2[MaxSize];
+template <class T>
+void MGraph<T>::BFSTraverse(int v)     //广度优先遍历图
+{
+ 
+  if ( v>vertexNum) throw "位置";      //如果输入不正确抛出异常
+  int front=-1;
+  int rear=-1;                         //初始化队列,假设队列采用顺序存储且不会发生溢出
+  cout<<vertex[v]<<" ";                //被访问顶点入队
+  visited2[v]=1;  
+  int Q[MaxSize];
+  Q[++rear]=v; 
+  while (front!=rear)
+  {
+     v=Q[++front];                     //将队头元素出队并送到v中
+     for (int j=0; j<vertexNum; j++)
+       if (arc[v][j]<10000 && visited2[j]==0 ){
+          cout<<vertex[j]<<" ";
+		  visited2[j]=1; 
+		  Q[++rear]=j;
+       }
+  }
+}
+ 
+int test2()
+{
+	int i;
+   	int choose=1;                      //控制
+    int which;                         //功能选择变量	
+	string name;                       //插入顶点的值	                                                          
+    string vname[4]={"we","wo","er","tt"};  //初始化各顶点
+    int pos1;                           //顶点
+	int pos2;                           //顶点
+	int m;                                                   
+	MGraph<string> g(vname,4,0);        //调用Graph程序
+   while ( choose==1 )                  //控制
+	{
+	  cout << "需要输出顶点信息请按0" << "\n";		   //输入所要进行的操作的序号
+	  cout << "需要输出任意一个顶点信息请按1" << "\n";
+      cout << "需要边的信息输出请按2" << "\n";
+      cout << "需要删除请按3" << "\n";
+      cout << "需要插入请按4" << "\n";	  
+	  cout << "需要删除某条边请按5" << "\n";
+	  cout << "需要插入某条边请按6" << "\n";
+	  cout << "需要深度优先遍历请按7" << "\n";
+	  cout << "需要广度优先遍历请按8" << "\n";
+	  cout << "需要退出请按10" << "\n";
+      cin >> which;
+      switch( which )                  //功能选择
+	  {
+         
+	   case 0:                   //输出图的各顶点的值
+		     g.PutVex();                                
+			
+		    break;      
+	   
+	   case 1:                   //输出图的任意顶点的值
+		  try
+		  {
+			 int i;
+			 cout<<"请输入顶点："<<"\n";
+		     cin>>i;
+			 g.GetVex(i,vname);				              
+                        
+		  }
+		  catch(char*)
+		  {
+			 cout<<"输出不正确！"<<endl;
+		  }
+			
+		    break;
+	  
+	   case 2:                       //输出图中的边	     
+		    cout<<"所有的边的信息为:"<<"\n";
+		  try
+		  {
+				g.InsertArc(0,1,23);   //插入边
+	            g.InsertArc(1,2,34);
+	            g.InsertArc(2,3,12);           
+		  }
+		  catch(char*)
+		  {
+			  cout<<"输出不正确！"<<endl;
+		  }            
+		    break;                
+
+       case 3:                        //删除hh顶点
+  	       int hh ;
+		   cout<<"请输入要删除的顶点"<<"\n";
+	       cin>>hh;
+	       try
+		   {
+			  g.DeleteVex(hh);                 
+		   }
+		   catch(char*)
+		   {
+		      cout<<"删除失败！"<<endl;
+		   }
+			break;
+
+       case 4:                        //在nn位置插入值为name的顶点
+	      int nn ;
+		  cout<<"请输入要插入的顶点位置及名称"<<"\n";
+	      cin>>nn>>name;			   
+	      try
+		  {
+			  g.InsertVex(nn,name); 
+		  }
+		  catch(char*)
+		  {
+			  cout<<"插入失败！"<<endl;
+		  }
+			break;
+
+       case 5:                      //删除两顶点之间的路径         
+	      cout<<"请输入两顶点："<<"\n";
+		  cin>>pos1>>pos2;
+		  try
+		  {
+			 g.DeleteArc(pos1,pos2); 
+		  }
+		  catch(char*)
+		  {
+		     cout<<"插入失败！"<<endl;
+		  }
+          
+	        break;
+
+       case 6:                   //插入一条边         
+	      cout<<"请输入两顶点："<<"\n";
+		  cin>>pos1>>pos2;
+		  cout<<"请输入路径："<<"\n";
+		  cin>>m;
+		  try
+		  {
+			 g.InsertArc(pos1,pos2,m);
+		  }
+		  catch(char*)
+		  {
+			 cout<<"插入失败！"<<endl;
+		  }
+          
+	        break;
+
+       case 7:                  //深度遍历
+		  cout<<"请输入顶点："<<"\n";
+		  for (i=0; i<MaxSize; i++)                                                   
+			 visited[i] = 0;
+		  int mm;
+		  cin>>mm;
+		  try
+		  {
+		     g.DFSTraverse(mm);
+		  }
+		  catch(char*)
+		  {
+		     cout<<"输入失败！"<<endl;
+		  }
+              
+		    break;
+
+       case 8:                  //广度遍历
+		  cout<<"请输入顶点："<<"\n";		  
+		  int visited2[MaxSize];
+		  for (i=0; i<MaxSize; i++) 
+		      visited2[i]=0;
+			 int mr;
+		     cin>>mr;		  
+		  try
+		  {
+			 g.BFSTraverse(mr);
+		     cout<<"\n";
+		  }
+		  catch(char*)
+		  {
+		     cout<<"输入失败！"<<endl;
+		  }              
+		    break;
+			
+       case 10:              
+              choose=0;
+            break;         
+  }
+ }		  
+return 0;
+ }
+void fun6()
+{
+test1();
+test2();
+}
+#include"wz.h"
+#define setbit(x,y) (x)|=(1<<(y-1))
+#define BitGet(Number,pos) ((Number)>>(pos-1)&1)
+#define Rot(a,k) ((a)<<(k)|(a)>>(32-k))
+ 
+int main()                                                                             
+ {
+int x[6]={1,2,3,4,5,6};
+printf("%d\n",(1<2)?(x[2]=x[3]):x[5]);
+return 0;
+}
+ //  #if(0)
+
+static bz=0;
+void hanoi(int n, char A,char B,char C)
+ {
+if(n == 1) 
+{
+printf("Move sheet %d from %c to %c\n", n, A,C);
+bz++;
+}
+else 
+{
+bz++;
+hanoi(n-1,A,C,B);
+printf("Move sheet %d from %c to %c\n", n, A,C);
+hanoi(n-1,B,A,C);
+}
+}
+int main()                                                                             
+ {
+int n;
+printf("请输入盘数：");
+scanf("%d", &n);
+hanoi(n,'A', 'B', 'C');
+printf("%d\n",bz);
+return 0;
+}
+
+
+
+
+void main()
+{
+int x=7;
+int y=4;
+int ret;
+ //ret=setbit(x,y);  printf("%d\n",ret);
+ // ret=BitGet(x,y);  printf("%d\n",ret);
+
+ ret=Rot(x,y) ;      printf("%d\n",ret);
+   
+ 
+}
+ int v(const char *str)
+{  
+     //argument check first!   
+     assert(NULL != str);  
+     int ret=0,sign=1;  
+    
+    for(; *str==' '||*str=='\t'; str++);  
+    if(*str == '-')sign = -1;  
+     if(*str == '-' || *str == '+')str++;  
+     while(isdigit(*str))
+  {  
+         ret = ret*10 + *str - '0';  
+          str++;  
+          }  
+      return sign*ret;  
+ }  
+ 
+void main()
+{
+float x=12.25;
+
+printf("%d\n",x);
+
+printf("%d\n",v("12 3"));
+
+//10
+}
+   
+
+
+void main()
+{
+char s[1000];
+
+printf("%d\n",sprintf(s,"%d\n",123));
+
+//10
+}
+void reserve(char *p, char *q)  
+{  
+    while(p < q)  
+    {  
+        *p ^= *q;  //利用异或运算得到两字符交换  
+        *q ^= *p;  
+        *p ^= *q;  
+        p++;  
+        q--;  
+    }  
+}  
+void loopMove(char *str, int steps)  
+{  
+    char *p = str;  
+    int len = strlen(str);  `
+    char *q = p + len - 1 - steps;  
+    //printf("%s\n", q);  
+  
+    reserve(p, q);   //先翻转前一段  
+    p = q + 1;  
+    q = str + len - 1;  
+    reserve(p, q);   //翻转后一段  
+    p = str;  
+    reserve(p, q);   //翻转整个字符串  
+    //printf("%s\n", str);  
+}  
+  
+int main()  
+{  
+    char string[] = "123456789";  
+    int steps = 0;  
+  
+    printf("string: %s\n", string);  
+    printf("input step: ");  
+    scanf("%d", &steps);  
+    loopMove(string, steps);  
+    printf("after loopMove %d: %s\n", steps, string);  
+  
+    return 0;  
+} 
+
+
+
+ 
+static cc=0;
+
+
+char maze[6][14] = 
+{
+	"1111111111111",
+	"1011100000001",
+	"1011101111101",
+	"1000000000001",
+	"10111111110!1",//4,11
+	"1111111111111"
+};
+
+
+void show_maze()
+{ int i=0,j=0;
+	for ( i=0;i<6;i++)
+	{
+		for (j=0;j<13;j++)
+		{
+			printf("%c",maze[i][j]);
+		}
+		printf("\n");
+	}
+     cc++;
+    printf("%d\n",cc);
+	printf("$$$$$$$$$$$$$\n\n\n");
+}
+
+void find_maze(int i,int j)
+{
+	//maze[i][j] = '?';
+	show_maze();
+	if (maze[i][j] == '1' || maze[i][j] == '#')
+	{
+		return ;
+	}
+	if (maze[i][j] == '!')
+	{
+		printf("找到出口\n");
+		printf("%d,%d,",i,j);
+		exit(0);
+	}
+	
+	maze[i][j] = '#';
+	find_maze(i-1,j);
+	find_maze(i,j-1);
+	
+	find_maze(i+1,j);
+	find_maze(i,j+1);
+}
+
+int main()
+{	
+	find_maze(1,1);
+	
+	return 0;
+}
+ 
+
+ 
+
+
+typedef struct  _soft_array
+{
+    int len;
+    int array[];
+ }SoftArray;
+
+
+int main()
+
+{  
+  
+  int i = 0;
+  
+  SoftArray* sa = (SoftArray*)malloc(sizeof(SoftArray) + sizeof(int) * 10);
+  
+   sa->len = 10;
+    
+   
+ for(i=0; i<sa->len; i++)
+  
+  {
+       
+      sa->array[i] = i + 1;
+  
+  }
+    
+ 
+   for(i=0; i<sa->len; i++)
+  
+  {
+       
+     printf("%2d ", sa->array[i]);   
+
+    }
+    
+    
+free(sa);
+
+ printf("\nsa==%d\n",sizeof(sa));//CentOS5.6 32 下输出4 
+  
+
+ printf("\nSA==%d\n", sizeof(SoftArray));//CentOS5.6 32 下输出4 
+ 
+    return 0;
+
+}
+
+
+
+ 
+int v(int n,...)
+{
+va_list m;   va_start(m,n);
+int sum=0;
+while(n--)sum+=va_arg(m,int);
+//va_end(m);
+return sum;
+}
+ void  main(int argc, char **argv)
+
+{
+printf("%d\n",(v(4,2,3,4,5)));
+
+}  
+
+
+
+int main(int argc, char **argv)
+
+{
+    union {
+        short s;
+        char c[sizeof(short)];
+    } un;
+  
+  un.s = 0x0102;
+    if(sizeof(short)==2) {
+     
+   if(un.c[0]==1 && un.c[1] == 2)
+            
+printf("big-endian\n");
+      
+  else if (un.c[0] == 2 && un.c[1] == 1)
+          
+  printf("little-endian\n");
+        
+else
+            printf("unknown\n");
+    } 
+else
+  
+      printf("sizeof(short)= %d\n",sizeof(short));
+    
+exit(0);
+
+}
+void main1()
+{
+    int x = 1;
+    char *p = (char *)&x;
+
+    if(*p)    {printf("little\n");}
+    else      {printf("large\n");}
+       0;
+}
+void ma()
+{
+    short int x;
+    char x1,x2;
+    x = 0x1122;
+    x1 = ((char *)&x)[0];    //低地址
+    x2 = ((char *)&x)[1];    //高地址
+    printf("x1=%x\n",x1);//22
+    printf("x2=%x\n",x2);//11
+//若x1=0x11,则是大端; 若x2=0x22,则是小端......
+
+}
+void mai()
+{
+int x=18;int y=12;int xy=x*y;int r=x; if(x<y){x=x^y;y=x^y;x=x^y;}
+while(r) { r=y%x; y=x; x=r; }
+printf("(x,y)=%3d\n", y);
+printf("(x,y)=%3d\n", xy/y);
+ 
+
+}
+
+#endif
