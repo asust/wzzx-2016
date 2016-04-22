@@ -1,0 +1,4362 @@
+/***********************
+    WZ    ASUST 2016
+分页实现：注运用了c语言里的回调函数来实现
+***********************/
+#ifndef _SEQLIST_H_
+#define _SEQLIST_H_
+
+#define MAX 10
+#define CAP 5
+
+typedef int elem_type;
+class SEQLIST
+{
+private:
+	elem_type *data;
+	int length;
+	int TotalSize;
+public:
+	bool InitSeqList(SEQLIST *p);
+	bool ClearSeqList(SEQLIST *p);
+	bool IsFull(SEQLIST *p);
+	bool IsEmpty(SEQLIST *p);
+	int  Getlength(SEQLIST *p);
+	bool InsertHead(SEQLIST *p,elem_type e);
+	bool InsertTail(SEQLIST *p,elem_type e);
+	bool DeleteHead(SEQLIST *p);
+	bool DeleteTail(SEQLIST *p);
+	bool Destroy(SEQLIST *p);
+	bool IncSize(SEQLIST *p);
+	void Show(SEQLIST *p,void (*print)(elem_type));
+};
+
+void print_int(elem_type e);
+void print_char(elem_type e);
+#endif
+
+
+#include<iostream>
+#include "SEQLIST.h"
+using namespace std;
+#include<assert.h>
+
+bool SEQLIST :: InitSeqList(SEQLIST *p)
+{
+	if(p == NULL)
+	{
+		return false;
+	}
+	p->data = new elem_type[MAX];
+	assert(p->data != NULL);
+	p->length = 0;
+	p->TotalSize = MAX;
+	return true;
+}
+bool SEQLIST :: ClearSeqList(SEQLIST *p)
+{
+	if(p == NULL)
+	{
+		return false;
+	}
+	p->length = 0;
+	return true;
+}
+int  SEQLIST :: Getlength(SEQLIST *p)
+{
+	assert(p != NULL);
+	return p->length;
+}
+bool SEQLIST :: IsFull(SEQLIST *p)
+{
+	assert(p != NULL && p->data != NULL);
+	return p->length == p->TotalSize;
+}
+bool SEQLIST :: IsEmpty(SEQLIST *p)
+{
+	assert(p != NULL && p->data != NULL);
+	return p->length == 0;
+}
+bool SEQLIST :: InsertHead(SEQLIST *p,elem_type e)
+{
+	if(p == NULL)
+	{
+		return false;
+	}
+	assert(p->data != NULL);
+	if(IsFull(p))
+	{
+		IncSize(p);
+	}
+	int n = p->length;
+	for(int i=n;i>0;i--)
+	{
+		p->data[n] = p->data[n-1];
+	}
+	p->data[0] = e;
+	p->length++;
+	return true;
+}
+bool SEQLIST :: InsertTail(SEQLIST *p,elem_type e)
+{
+	if(p == NULL)
+	{
+		return false;
+	}
+	assert(p->data != NULL);
+	if(IsFull(p))
+	{
+		IncSize(p);
+	}
+	p->data[p->length] = e;
+	p->length++;
+	return true;
+}
+bool SEQLIST :: DeleteHead(SEQLIST *p)
+{
+	if(p ==NULL)
+	{
+		return false;
+	}
+	int n = p->length;
+	for(int i=0;i<n;i++)
+	{
+		p->data[i] = p->data[i+1];
+	}
+	p->length--;
+	return true;
+}
+bool SEQLIST :: DeleteTail(SEQLIST *p)
+{
+	if(p == NULL)
+	{
+		return false;
+	}
+	assert(p->data != NULL);
+	p->length--;
+	return true;
+}
+bool SEQLIST :: Destroy(SEQLIST *p)
+{
+	assert(p != NULL);
+	if(p->data == NULL)
+	{
+		return false;
+	}
+	delete[]p->data;
+	return true;
+}
+bool SEQLIST :: IncSize(SEQLIST *p)
+{
+	if(p == NULL)
+	{
+		return false;
+	}
+	assert(p->data != NULL);
+	p->data = (elem_type *)realloc(p,sizeof(elem_type)*p->TotalSize*2);
+	assert(p->data != NULL);
+	return true;
+}
+void SEQLIST ::Show(SEQLIST *p,void (*print)(elem_type))
+{
+	assert(p != NULL && p->data != NULL);
+	int n = p->length;
+	for(int i=0;i<n;i++)
+	{
+		print(p->data[i]);
+	}
+	printf("\n");
+}
+#include "SEQLIST.h"
+#include <iostream>
+using namespace std;
+#include<vld.h>
+int main()
+{
+	SEQLIST p;
+	p.InitSeqList(&p);
+	p.InsertTail(&p,10);
+	p.InsertTail(&p,20);
+	p.InsertTail(&p,30);
+	p.Show(&p,print_int);
+	p.Destroy(&p);
+	return 0;
+}
+void print_int(elem_type e)
+{
+	printf("%d ",e);
+}
+
+void print_char(elem_type e)
+{
+	printf("%c ",e);
+}
+
+ /*************************
+   
+   WZ  ASUST  2016
+
+C++  实现双向链表
+
+
+*************************/
+
+
+
+#include"sts.h"
+class CList{
+public:
+    struct Link{
+                Link *pPrev,*pNext;
+                int   nData;
+                //节点的初始化，前驱与后继指针置空
+                Link( int Data = 0): pPrev(NULL),pNext(NULL)
+                {
+                   nData = Data;
+                }
+                 ~Link() {}
+             };
+public:
+CList( Link* p = NULL)
+{
+   pHead = pTail = p;
+};
+//类的析构，具体由调用后面Clear实现；
+~CList()
+{
+   Clear();
+}
+//类成员为头尾指针，体现这一结构设计。
+Link* pHead,*pTail;
+
+void AddHead( Link* p)
+{
+   if( pHead )
+   {
+    pHead->pPrev = p;
+    p->pNext = pHead;
+    pHead = p;
+   }
+  else
+  {
+    pHead = p;
+   }
+   if( NULL == pTail )
+  {
+    pTail = pHead;
+   }
+};
+void AddTail( Link* p)
+{
+   if( pTail )
+   {
+    pTail->pNext = p;
+    p->pPrev = pTail;
+    pTail = p;
+   }
+  else
+  {
+    pTail = p;
+   }
+   if( NULL == pHead )
+  {
+    pHead = pTail;
+  }
+}
+ 
+void Addmiddle( Link* enter,int n)
+{
+//just test;
+n=n-2;
+Link* p = pHead;
+   while( p&&n-- )
+   {
+    p = p->pNext;
+   }
+ enter->pNext=p->pNext;
+  (p->pNext)->pPrev=enter;
+ enter->pPrev=p;
+ p->pNext=enter;
+ }
+ 
+void Print()
+{
+   Link* p = pHead;
+   while( p )
+   {
+    cout<< p->nData<<",";
+    p = p->pNext;
+   }
+   cout<<endl;
+}
+void Clear()
+{
+   Link* p = pHead;
+   while( p )
+   {
+    Link* pt = p->pNext;
+    delete p;
+    p = pt;
+   }
+   pHead = pTail = NULL;
+};
+void DelHead()
+{
+   if( pHead )
+   {
+    Link* p = pHead->pNext;
+    if( p == pTail )
+    {
+     delete pHead;
+     pTail->pPrev = pTail;
+     pHead = pTail ;
+    }
+    else
+   {
+     delete pHead;
+     pHead = p;
+     p->pPrev = NULL;
+    }
+   }
+};
+void DelTail()
+{
+   if( pTail )
+   {
+    Link* p = pTail->pPrev;
+    if( p == pHead )
+    {
+     delete p;
+     pHead->pNext = pHead;
+     pTail = pHead;
+    }
+    else
+   {
+     delete pTail;
+     pTail = p;
+     p->pNext = NULL;
+    }
+   }
+}
+int lengthlist()
+{  int length=0;
+   Link* p = pHead;
+  if(pHead)
+  {
+      while( p )
+     {
+        p = p->pNext;
+        length++;
+     }
+    cout<<"length is "<<length<<endl;
+   return length;
+  }
+  else  return 0;
+}
+int reverselist()
+{  int  len=lengthlist();
+   int state=1;
+   int tmp=0;
+   Link* p = pHead;Link* q = p->pNext;
+     while(len--&&state )
+     { cout<<"ckeck"<<endl;
+        while(q->pNext)
+       { cout<<"ckeck2"<<endl;
+        if(p->nData >= q->nData )
+          {tmp=p->nData; p->nData= q->nData;q->nData=tmp;}
+         p =p->pNext; q = q->pNext;
+       }
+
+     }
+   
+ }
+ 
+void ptintfloop()
+
+{  int n=20;
+  Link* p = pHead;
+   Link* q = pTail;
+   
+ while(n--)
+ {n=n-1;
+   while(p!=pTail&&n--)
+   {
+    cout<<(p->nData);
+    p=p->pNext;
+    n=n-1;
+   }
+   while(q!=pHead&&n--)
+   {
+    cout<<(q->nData);
+     q=q->pNext;
+    n=n-1;
+   }
+ }
+}
+void  listtoloop()
+{  if(pHead)
+   {
+     pHead->pPrev=pTail;
+    pTail->pNext=pHead;
+    }  
+   else return;
+}
+
+
+};
+int main()
+{
+CList list;
+list.AddHead( new CList::Link(2) );
+list.AddHead( new CList::Link(0) );
+list.AddHead( new CList::Link(1) );
+list.AddHead( new CList::Link(6) );
+list.AddHead( new CList::Link(3) );
+list.AddTail( new CList::Link(1) );
+list.AddTail( new CList::Link(4) );
+list.AddTail( new CList::Link(5) );
+list.AddTail( new CList::Link(2) );
+list.AddTail( new CList::Link(0) );
+list.DelHead();
+list.DelTail();
+list.Print();
+cout<<endl<<"########################################################"<<endl;
+list.DelHead();
+list.DelHead();
+list.DelTail();
+list.DelTail();
+list.Print();
+cout<<endl<<"########################################################"<<endl;
+list.AddHead( new CList::Link(1) );
+list.AddHead( new CList::Link(2) );
+list.AddHead( new CList::Link(3) );
+list.AddHead( new CList::Link(4) );
+list.AddHead( new CList::Link(5) );
+list.AddTail( new CList::Link(6) );
+list.Print();
+list.DelHead();
+cout<<"Del Head()"<<endl;
+list.Print();
+list.AddTail( new CList::Link(7) );
+list.AddTail( new CList::Link(8) );
+list.AddTail( new CList::Link(9) );
+list.AddTail( new CList::Link(10) );
+list.Print();
+list.lengthlist();
+// list.reverselist();//bug
+// list.listtoloop();
+//list.ptintfloop();  // bug  always printf all;
+list.Print();
+list.Addmiddle( new CList::Link(111),3);
+list.Print();
+list.Clear();
+ 
+return 0;
+}
+/*************************
+   
+   WZ  ASUST  2016
+
+   C++  实现单向链表
+
+
+*************************/
+
+
+
+#include"sts.h"
+class CList{
+public:
+    struct Link{
+                Link *next;
+                int   data;
+               
+                Link( int Data = 0): next(NULL)
+                {
+                   data = Data;
+                }
+                 ~Link() {}
+             };
+public:
+CList( Link* p = NULL)
+{
+   pHead = pTail = p;
+};
+//类的析构，具体由调用后面Clear实现；
+~CList()
+{
+   Clear();
+}
+//类成员为头尾指针，体现这一结构设计。
+Link* pHead,*pTail;
+
+void AddHead( Link* p)
+{
+   if( pHead )
+   {
+     p->next= pHead;
+     pHead=p;
+   }
+  else
+  {
+    pHead = p;
+   }
+   if( NULL == pTail )
+  {
+    pTail = pHead;
+   }
+};
+ 
+void AddTail( Link* p)
+{  p->next=NULL;
+   if( pTail )
+   {
+    pTail->next = p;
+       pTail=p;
+   }
+  else
+  {
+    pTail = p;
+   }
+   
+}
+ 
+void Addmiddle( Link* enter,int n)
+{
+//just test;
+n=n-2;
+Link* p = pHead;
+   while( p&&n-- )
+   {
+    p = p->next;
+   }
+ enter->next=p->next;  
+ p->next=enter;
+ }
+ 
+ 
+int lengthlist()
+{  
+   int length=0;
+   Link* p = pHead;
+  if(pHead)
+  {
+      while( p )
+     {
+        p = p->next;
+        length++;
+     }
+    cout<<"length is "<<length<<endl;
+   return length;
+  }
+  else  return 0;
+}
+void paixu( )
+{    int x= lengthlist()+2;  int t=0; int state=1;
+int ii=0,jj=0,kk=0;
+ Link *p=pHead,*q=p->next;
+ while(x--&&state)
+  { ii++;
+  while (p->next)
+    {
+     jj++;
+    if(p->data >= q->data){t=q->data;q->data=p->data;p->data=t;kk++;}
+    else state=0;
+    p=p->next;q=q->next;
+    }
+  }
+
+ 
+}
+
+void sort( )
+{
+ Link *p,*q,*hs= new Link;
+ Link *s=pHead;
+ hs->next=NULL;
+ hs->data=-1;
+ while(s->next)
+ {
+  p=s->next;
+  s->next=p->next;
+  q=hs;
+   
+  while(q->next)
+  {
+   
+   if(p->data <= q->next->data){p->next=q->next;q->next=p;break;}
+   q=q->next;
+  }
+   
+   if(!q->next){q->next=p;p->next=NULL;}
+ }
+ s->next=hs->next;
+}
+
+void reverselist()
+{
+Link *p=pHead;
+Link *q=pHead;
+Link *th = NULL;
+  while(p)
+  {
+     q=p;
+     p=p->next;
+     q->next=th;
+     th=q;
+   }
+ pHead=th;
+}
+
+void Print()
+{
+   Link* p = pHead;
+   while( p )
+   {
+    cout<< p->data<<" ";
+    p = p->next;
+   }
+   cout<<endl;
+}
+void Clear()
+{
+   Link* p = pHead;
+   while( p )
+   {
+    Link* pt = p->next;
+    delete p;
+    p = pt;
+   }
+   pHead = pTail = NULL;
+};
+ 
+void DelHead()
+{
+   if( pHead )
+   {
+    Link* p = pHead->next;
+    if( p == pTail )
+    {
+     delete pHead;
+     pHead = pTail ;
+    }
+    else
+   {
+     delete pHead;
+     pHead = p;
+    }
+   }
+   else return; //could not write this.
+};
+ 
+ 
+void DelTail()
+{
+   if( pTail )
+   {
+     Link* p = pTail;
+     if( p == pHead )
+     {
+      delete p;    
+      pTail= NULL;pHead=NULL;
+     }
+     else
+    {  Link* q =pHead; int len=lengthlist()-2;
+     while(len --)
+          {  q=q->next;}
+        pTail=q;
+       delete p;
+       
+     
+    }
+   }
+   else return;
+}
+
+ 
+int sort1()
+{  int  len=lengthlist();
+   int state=1;
+   int tmp=0;
+   Link* p = pHead;Link* q = p->next;
+     while(len--&&state )
+     { cout<<"ckeck"<<endl;
+        while(q->next)
+       { cout<<"ckeck2"<<endl;
+        if(p->data >= q->data )
+          {tmp=p->data; p->data= q->data;q->data=tmp;}
+         p =p->next; q = q->next;
+       }
+
+     }  
+ }
+ 
+void ptintfloop()
+
+{  int n=20;
+  Link* p = pHead;
+   Link* q = pTail;
+   
+ while(n--)
+ {n=n-1;
+   while(p!=pTail&&n--)
+   {
+    cout<<(p->data)<<" ";
+    p=p->next;
+    n=n-1;
+   }
+   while(q!=pHead&&n--)
+   {
+    cout<<(q->data)<<" ";
+     q=q->next;
+    n=n-1;
+   }
+ }
+}
+ 
+void  listtoloop()
+{  if(pHead)
+   {
+    Link* p = pHead;
+    while(p->next)
+    {
+     p=p->next;
+    }  
+   p->next=pHead;
+   }
+   else return;
+}
+
+ 
+};
+void test1()
+{
+CList list;
+list.AddHead( new CList::Link(2) );
+list.AddHead( new CList::Link(2) );
+list.AddTail( new CList::Link(8) );
+list.AddTail( new CList::Link(1) );
+list.AddTail( new CList::Link(8) );
+//   list.DelTail();   //(core dumped)
+list.Print();
+list.DelHead();    //ok
+list.Addmiddle( new CList::Link(9),3 );
+list.lengthlist();
+//list.sort1();//bug
+
+// list.paixu();//bug
+// list.sort();  //bug
+list.reverselist();  //ok
+list.Print();
+//list.listtoloop();
+//list.ptintfloop();//0k
+
+list.Clear();
+ 
+}
+
+int main()
+{
+test1();
+return 0;
+}
+ #include"wz.h"
+
+
+
+ 
+typedef struct mylist
+{
+int data;
+struct mylist *next;
+}mylist;
+
+
+int listlength(mylist *list)
+{
+int length=0;
+mylist *p=list;
+while(p)
+{
+p=p->next;
+length++;
+}
+return length;
+}
+
+paixu(mylist *list)
+{    int x=listlength(list)+2;  int t=0; int state=1;
+int ii=0,jj=0,kk=0;
+ mylist *p=list,*q=p->next;
+ while(x--&&state)
+  { ii++;
+  while (p->next)
+    {
+     jj++;
+    if(p->data >= q->data){t=q->data;q->data=p->data;p->data=t;kk++;}
+    else state=0;
+    p=p->next;q=q->next;
+    }
+  }
+printf("paixu :\nii==%d,jj==%d,kk==%d\n",ii,jj,kk);
+}
+
+
+printflist(mylist *list)
+{
+  mylist  *p=list;
+ 
+  while(p)
+  {
+    printf("%3d",p->data);
+    p=p->next;
+  }
+printf("\n" );
+}
+main()
+{
+
+int i;
+int k=9;
+int t=0;
+mylist *list=(mylist *)malloc(sizeof(mylist));
+list->data = 11;
+list->next = NULL;
+mylist  *new,*p=list,*q=p->next;
+i=11;
+while(i--)
+{
+ new=(mylist *)malloc(sizeof(mylist));
+  new->data=i;    //   printf("%2d",new->data);
+  new->next = list->next;
+ list->next = new;
+ 
+}
+printflist(list);
+while(k--)
+{p=p->next;}
+printf("%d\n",p->data);
+
+q=p->next;
+t=q->data;q->data=p->data;p->data=t;
+printflist(list);
+printf("%d\n",p->data);
+paixu(list);
+printflist(list);
+
+}
+ /*********************
+    WZ  ASUST
+			
+写实拷贝
+注意每一个重载的操作
+修改一个对象的操作均需要构造空间
+S[2]='S'怎样传参数
+*********************/
+
+#include"sts.h"
+ class String
+{
+public:
+     String(char *str = "")
+      :_str(new char[strlen(str) + 5])
+     {
+          *(int *)_str = 1;
+          _str += 4;
+          strcpy(_str, str);
+     }
+     ~String()
+     {
+          if (_str != NULL)
+          {
+              _clear();
+          }
+     }
+     String(const String& str)
+     {
+          _str = str._str;
+          ++_GetRefCount();
+     }
+     String& operator=(const String& str)
+     {
+          if (this != &str)
+          {
+               _clear();
+               _str = str._str;
+               ++ _GetRefCount();
+          }
+          return *this;
+     }
+     char& operator[](int index)//写时拷贝
+     {
+ 
+          if (_GetRefCount()>1)//当引用次数大于1时新开辟内存空间
+          {
+               --_GetRefCount();//原来得空间引用计数器减1
+               char *str = new char[strlen(_str) + 5];
+               strcpy(str+4, _str);
+               _str = str+4;
+               _GetRefCount()++;
+          }
+          return _str[index];
+     }
+     friend ostream& operator<<(ostream& output, const String& str)
+     {
+          output << str._str<<endl;
+          return output;
+     }
+ 
+private:
+     int& _GetRefCount()
+     {
+          return *(int *)(_str - 4);
+     }
+     void _clear()
+     {
+          if (--_GetRefCount() == 0)
+          {
+               delete[] (_str-4);
+          }
+     }
+private:
+     char *_str;
+};
+
+int main()
+{
+String s1("123");
+String s2(s1);
+String s3("1234");
+cout<<s1;
+cout<<s2;
+s2=s3;
+cout<<s2;
+cout<<s3;
+return 0;
+}
+ /*******************
+ 
+     WZ  ASUST 2016
+1：先int实例 后模板化
+2： 复制不能改变原串的数据及结构
+3： 随机指针的正确性
+思考：除了追加新结点后分离新旧链表；
+         还有一复杂度高的算法，就是记录下每一个结点，随机指针指向的结点在整个链中的排序（队列实现）建立新链表后，根据队列记录，连接随机指针；
+         不能记录值，仅能实现一些特殊的，如无重复段的链；
+
+*******************/
+
+#include <map>
+#include<queue>
+#include"wz.h"
+  struct ComplexNode
+{
+    int value;
+    ComplexNode* pNext;
+    ComplexNode* pSibling;
+};      
+struct myNode
+{
+    int value;
+    int* ptr;
+     myNode *next;
+};  
+ComplexNode* Clone(ComplexNode* pHead)
+ {
+    if(pHead == NULL)  return NULL;
+     map<ComplexNode*, ComplexNode*> pointMap;
+     ComplexNode* newHead,*tail;
+     newHead = new ComplexNode;
+     newHead->value = pHead->value;
+     newHead->pNext = NULL;
+     newHead->pSibling = NULL;
+     pointMap[pHead] = newHead;
+     tail = newHead;
+     ComplexNode *p = pHead->pNext;
+     while(p != NULL)
+     {
+        ComplexNode* newNode = new ComplexNode;
+        newNode->value = p->value;
+        newNode->pNext = NULL;
+        newNode->pSibling = NULL;
+        tail->pNext = newNode;
+        tail = newNode;
+        pointMap[p] = newNode;
+         p = p->pNext;
+     }
+     p = pHead;
+     tail = newHead;
+     while(p!=NULL)
+     {
+         if(p->pSibling!=NULL)
+         {
+             tail->pSibling = pointMap.find(p->pSibling)->second;
+         }
+         p = p->pNext;
+         tail  = tail->pNext;
+     }
+    return newHead;
+ }
+
+ void deleteList(ComplexNode* pHead)
+ {
+    while(pHead!=NULL)
+    {
+        ComplexNode* pNext = pHead->pNext;
+        delete pHead;
+        pHead = pNext;
+    }
+ 
+ }
+void print(ComplexNode* pHead)
+{ ComplexNode* p=pHead;
+  while(p)
+  {
+  cout<<p->value<<" ";
+  p=p->pNext;
+  }
+cout<<endl;
+
+}
+void print( myNode* pHead)
+{  myNode* p=pHead;
+  while(p)
+  {
+  cout<<p->value<<" ";
+  p=p->next;
+  }
+cout<<endl;
+
+}
+ 
+ 
+   
+ComplexNode* myClone2(ComplexNode* pHead)
+ { //int k=4;
+   ComplexNode*p= new ComplexNode;
+   ComplexNode*q= NULL;
+   ComplexNode*newhead= NULL;
+    if(pHead)
+  {    
+    p=pHead;
+    while(p->pNext)
+    {
+     ComplexNode*add= new ComplexNode;
+     add->value=p->value;
+     add->pSibling=NULL;add->pNext=p->pNext;
+     p->pNext=add;
+     p=p->pNext->pNext;
+   }
+     ComplexNode*add= new ComplexNode;
+     add->value=p->value;
+     add->pSibling=NULL;add->pNext=p->pNext;
+     p->pNext=add;
+     p=pHead;
+     q=p->pNext;
+     newhead=q;
+     cout<<q->value<<endl;
+ //  bug rand pointor:pSibling
+     
+     //while(p->pNext)
+    while(k--)
+    {
+     q->pSibling=p->pSibling->pNext;
+      //p->pNext=q->pNext;
+          //      q->pNext=p->pNext;
+       //p=p->pNext;
+      // q=q->pNext;
+    }
+	 
+
+   //while(p->pNext)
+   // {
+    // q->pSibling=p->pSibling->pNext;
+   
+    //   p->pNext=p->pNext->pNext;
+     //q->pNext=q->pNext->pNext;
+      // p=p->pNext->pNext;
+      // q=q->pNext->pNext;
+   // }
+   /**  made new link:q***/
+   //     newhead=q;
+    // while(q->pNext)
+    //{
+    //  q->pNext=q->pNext->pNext;
+    //  q=q->pNext;
+   // }
+    /*****new link out*****/
+     // p=pHead;
+       q=newhead;
+     while(q->pNext)
+    {
+    p->pNext=q->pNext;p=p->pNext;
+    q->pNext=p->pNext;q=q->pNext;
+   }
+    // delete p->pNext;   //can ont do this
+    p->pNext=NULL;        // must do this  or add 4 to old link
+    // new link out
+                         // p=pHead;
+  }
+return newhead;
+}
+void t2()
+{   cout<<"t2()"<<endl;
+   
+    ComplexNode* p1 = new ComplexNode;
+    ComplexNode* p2 = new ComplexNode;
+    ComplexNode* p3 = new ComplexNode;
+    ComplexNode* p4 = new ComplexNode;
+    p1->pNext = p2; p2->pNext = p3;
+    p3->pNext = p4; p4->pNext = NULL;
+    p1->value = 1 ; p2->value = 2;
+    p3->value = 3 ; p4->value = 4;
+    p1->pSibling = p3;p2->pSibling = p4;
+    p3->pSibling = NULL; p4->pSibling = NULL;
+    print(p1);
+    ComplexNode* newHead = myClone2(p1);
+ cout<<"old link:"<<endl;   print(p1);
+ cout<<"new link:"<<endl;    print(newHead);
+  //  cout<<(newHead->pSibling)->value<<endl; //3
+    deleteList(newHead);
+    deleteList(p1);
+   
+}
+
+int main()
+{
+t2();
+return 0;
+}
+#include<iostream>
+using namespace std;
+ 
+template<class T>
+class AutoPtr
+{
+public:
+    AutoPtr(T* ptr = NULL)
+        :_ptr(ptr)
+        , _owner(true)
+    {}
+ 
+    AutoPtr(const AutoPtr<T>& ap)
+        :_ptr(ap._ptr)
+    {
+        ap._owner = false;
+        _owner = true;
+    }
+ 
+    AutoPtr<T>& operator=(const AutoPtr<T>& ap)
+    {
+        if (&s != this)
+        {
+            delete _ptr;
+            _ptr = ap._ptr;
+            ap._owner = false;
+            _owner = true;
+        }
+        return *this;
+    }
+ 
+    ~AutoPtr()
+    {
+        if (_ptr)
+        {        
+            delete _ptr;
+            _ptr = NULL;
+            _owner = false;
+        }
+    }
+ 
+    T* operator->()
+    {
+        return _ptr;
+    }
+ 
+    T& operator*()
+    {
+        return *_ptr;
+    }
+private:
+    T* _ptr;
+    bool _owner;
+};
+ 
+void Test()
+{
+    AutoPtr<int> ap1(new int(1));
+    AutoPtr<int> ap2(ap1);
+    AutoPtr<int> ap3 = ap1;
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+if(……)
+{
+     AutoPtr<int> ap2(ap1);
+     ……
+}
+#include<iostream>
+using namespace std;
+ 
+template<class T>
+class AutoPtr
+{
+public:
+    AutoPtr(T* ptr)
+    :_ptr(ptr)
+    {}
+ 
+    AutoPtr()
+    :_ptr(NULL)
+    {}
+ 
+    AutoPtr<T>(AutoPtr<T>& ap)    //权限转移
+        : _ptr(ap._ptr)
+    {
+        ap._ptr = NULL;
+    }
+ 
+    AutoPtr<T>& operator=(AutoPtr<T>& ap)
+    {
+        if (&ap != this)
+        {
+            delete _ptr;
+            _ptr = ap._ptr;
+            ap._ptr = NULL;     //权限转移
+        }
+        return *this;
+    }
+ 
+    ~AutoPtr()
+    {
+        if (_ptr)
+        {
+            delete _ptr;
+            _ptr = NULL;
+        }
+    }
+ 
+    T& operator*()
+    {
+        return *_ptr;
+    }
+ 
+private:
+    T* _ptr;
+};
+ 
+void Test()
+{
+    AutoPtr<int> ap1(new int(2));
+    AutoPtr<int> ap2 = ap1;
+    AutoPtr<int> ap3(new int(3));
+    ap3 = ap1;
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+
+#include<iostream>
+using namespace std;
+ 
+template<class T>
+class ScopedPtr
+{
+public:
+    ScopedPtr(T* ptr)
+        :_ptr(ptr)
+    {}
+ 
+    Scoped()
+        :_ptr(NULL)
+    {}
+ 
+    ~ScopedPtr()
+    {
+        if (_ptr)
+        {
+            delete _ptr;
+            _ptr = NULL;
+        }
+    }
+ 
+    T& operator*()
+    {
+        return *_ptr;
+    }
+ 
+    T* GetPtr()
+    {
+        return _ptr;
+    }
+ 
+protected:
+    ScopedPtr<T>(const ScopedPtr<T>& sp);
+    ScopedPtr<T>& operator = (const ScopedPtr<T>& sp);
+ 
+private:
+    T* _ptr;
+};
+ 
+void Test()
+{
+    ScopedPtr<int> sp1(new int(2));
+    ScopedPtr<int> sp2 = sp1;
+    ScopedPtr<int> sp3(new int(3));
+    sp3 = sp1;
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+ 
+template<class T>
+class SharedPtr
+{
+public:
+    SharedPtr(T* ptr)
+        :_ptr(ptr)
+        , _pCount(new long(1))
+    {}
+ 
+    SharedPtr()
+        :_ptr(NULL)
+        , _pCount(new long(1))
+    {}
+ 
+    SharedPtr<T>(const SharedPtr<T>& sp)
+        : _ptr(sp._ptr)
+        , _pCount(sp._pCount)
+    {
+        ++(*_pCount);
+    }
+ 
+    SharedPtr<T>& operator=(const SharedPtr<T>& sp)
+    {
+        if (&sp != this)
+        {
+            if (--(*_pCount) == 0)
+            {
+                delete _ptr;
+                delete _pCount;
+            }
+            _ptr = sp._ptr;
+            _pCount = sp._pCount;
+            ++(*_pCount);
+        }
+        return *this;
+    }
+ 
+    ~SharedPtr()
+    {
+        if (_ptr)
+        {
+            if (--(*_pCount) == 0)
+            {
+                delete _ptr;
+                delete _pCount;
+            }
+        }
+    }
+ 
+    T& operator*()
+    {
+        return *_ptr;
+    }
+ 
+    long GetCount()
+    {
+        return *(_pCount);
+    }
+ 
+    T* GetPtr()
+    {
+        return _ptr;
+    }
+ 
+private:
+    T* _ptr;
+    long* _pCount;
+};
+ 
+ 
+void Test()
+{
+    SharedPtr<int> sp1 = new int(1);
+    SharedPtr<int> sp2 = sp1;
+    SharedPtr<int> sp3 = new int(2);
+    sp3 = sp1;
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+#include<assert.h>
+ 
+ 
+template<class T>
+class ScopedArray
+{
+public:
+    ScopedArray(T* ptr = NULL)
+        :_ptr(ptr)
+    {}
+ 
+    ~ScopedArray()
+    {
+        if (_ptr)
+        {
+            delete [] _ptr;
+            _ptr = NULL;
+        }
+    }
+ 
+    T& operator[](size_t index)
+    {
+        assert(index > 0);
+        return _ptr[index];
+    }
+     
+protected:
+    ScopedArray<T>(const ScopedArray<T>& sp);
+    ScopedArray<T>& operator=(const ScopedArray<T>& sp);
+ 
+private:
+    T* _ptr;
+};
+ 
+void Test()
+{
+    ScopedArray<int> sp1(new int[10]);
+}
+ 
+int main()
+{
+    Test();
+}
+
+五、SharedPtr
+ 
+#include<iostream>
+using namespace std;
+#include<assert.h>
+ 
+template<class T>
+class SharedArray
+{
+public:
+    SharedArray(T* ptr = NULL)
+        :_ptr(ptr)
+        , _pCount(new long(1))
+    {}
+ 
+    SharedArray<T>(const SharedArray<T>& sp)
+        : _ptr(sp._ptr)
+    {
+        (*_pCount)++;
+    }
+ 
+    SharedArray<T> operator=(const SharedArray<T>& sp)
+    {
+        if (&s != this)
+        {
+            if (--(*pCount) == 0)
+            {
+                delete _ptr;
+                _ptr = sp._ptr;
+                (*pCount)++;
+            }
+        }
+        return *this;
+    }
+ 
+    ~SharedArray()
+    {
+        if (_ptr)
+        {
+            if (--(*_pCount) == 0)
+            {
+                delete _ptr;
+                delete _pCount;
+                _ptr = NULL;
+                _pCount = NULL;
+            }
+        }
+    }
+ 
+    T* operator[](size_t index)
+    {
+        assert(index);
+        return _ptr[index];
+    }
+private:
+    T* _ptr;
+    long *_pCount;
+};
+ 
+ 
+void Test()
+{
+    SharedArray<int> sp1(new int[10]);
+    SharedArray<int> sp2(sp1);
+    SharedArray<int> sp3 = sp1;
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#define _CRT_SECURE_NO_WARNINGS 1
+#include<iostream>
+using namespace std;
+#include<string>
+ 
+struct __TrueType
+{
+    bool Get()
+    {
+        return true;
+    }
+};
+ 
+struct __FalseType
+{
+    bool Get()
+    {
+        return false;
+    }
+};
+ 
+template <class T>
+struct TypeTraits
+{
+    typedef __FalseType   __IsPODType;
+};
+ 
+template <>
+struct TypeTraits< bool>
+{
+    typedef __TrueType     __IsPODType;
+};
+ 
+template <>
+struct TypeTraits< char>
+{
+    typedef __TrueType     __IsPODType;
+};
+ 
+template <>
+struct TypeTraits< unsigned char >
+{
+    typedef __TrueType     __IsPODType;
+};
+ 
+template <>
+struct TypeTraits< short>
+{
+    typedef __TrueType     __IsPODType;
+};
+ 
+template <>
+struct TypeTraits< unsigned short >
+{
+    typedef __TrueType     __IsPODType;
+};
+ 
+template <>
+struct TypeTraits<int>
+{
+    typedef __TrueType __IsPODType;
+};
+ 
+template<class T>
+void _Memcpy(T& dest, const T& src, size_t size, __TrueType)    //基本类型
+{
+    cout << "IsPOD::" << typeid(T).name() << endl;
+    memcpy(dest, src, sizeof(T)*size);
+}
+ 
+template<class T>
+void _Memcpy(T& dest, const T& src, size_t size, __FalseType)
+{
+    cout << "IsNotPOD::"<<typeid(T).name() << endl;
+    for (int i = 0; i < size; i++)
+    {
+        dest[i] = src[i];
+    }
+}
+ 
+template<class T>
+class SeqList
+{
+public:
+    SeqList()
+        :_size(0)
+        , _capacity(0)
+        , _array(NULL)
+    {}
+ 
+    SeqList<T>(const SeqList<T>& s)
+    {
+        _array = new T[s._size];
+        if (TypeTraits <T>::__IsPODType().Get())
+        {
+            _Memcpy(_array, s._array, s._size, TypeTraits<T>::__IsPODType());
+        }
+        else
+        {
+            _Memcpy(_array, s._array, s._size, TypeTraits<T>::__IsPODType());
+        }
+        swap(_size, s._size);
+        swap(_capacity, s._capacity);
+    }
+ 
+    SeqList<T>& operator= (SeqList<T> s)
+    {
+        swap(_array, s._array);
+        swap(_size, s._size);
+        swap(_capacity, s._capacity);
+    }
+ 
+    ~SeqList()
+    {
+        if (_array)
+        {
+            delete[] _array;
+            _array = NULL;
+        }
+    }
+ 
+    void _CheckCapacity(size_t n)
+    {
+        if (n > _capacity)
+        {
+            _capacity = 2 * _capacity + 3;
+            T* tmp = new T[_capacity];
+            if (_array != NULL)
+            {
+                if (TypeTraits <T>::__IsPODType().Get())
+                {
+                    _Memcpy(tmp, _array, _size, TypeTraits <T>::__IsPODType());
+                }
+                else
+                {
+                    _Memcpy(tmp, _array, _size, TypeTraits <T>::__IsPODType());
+                }
+            }            
+            delete[] _array;
+            _array = NULL;
+            _array = tmp;
+        }
+    }
+ 
+    void PushBack(const T& x);
+    void PopBack();
+    void PrintSeqList();
+ 
+private:
+    size_t _size;
+    size_t _capacity;
+    T* _array;
+};
+ 
+ 
+template<class T>
+void SeqList<T>:: PushBack(const T& x)
+{
+    _CheckCapacity(_size + 1);
+    _array[_size++] = x;    
+}
+ 
+template<class T>
+void SeqList<T>:: PopBack()
+{
+    if (_size == 0)
+    {
+        return;
+    }
+    else
+    {
+        --_size;
+    }
+}
+ 
+template<class T>
+void SeqList<T>:: PrintSeqList()
+{
+    for (int i = 0; i < _size; i++)
+    {
+        cout << _array[i] << "  ";
+    }
+    cout << endl;
+}
+ 
+ 
+//int的测试函数
+//void Test()
+//{
+//    SeqList<int> s1;
+//    s1.PushBack(1);
+//    s1.PushBack(2);
+//    s1.PushBack(3);
+//    s1.PushBack(4);
+//    s1.PushBack(5);
+//    s1.PrintSeqList();
+ 
+//  s2.PopBack();
+//  s2.PrintSeqList();
+//}
+ 
+//string的测试函数
+void Test()
+{
+    SeqList<string> s2;
+    s2.PushBack("hello ");
+    s2.PushBack("world ");
+    s2.PushBack("I ");
+    s2.PushBack("love ");
+    s2.PushBack("IT");
+    s2.PrintSeqList();
+ 
+    s2.PopBack();
+    s2.PrintSeqList();
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+#include<assert.h>
+ 
+template<class T>
+struct ListNode
+{
+    ListNode(const T& x)
+    :_next(NULL)
+    , _prev(NULL)
+    , _data(x)
+    {}
+ 
+    ListNode<T>* _next;
+    ListNode<T>* _prev;
+    T _data;
+};
+ 
+template<class T>
+class List
+{
+public:
+    List()
+        :_head(NULL)
+        , _tail(NULL)
+    {}
+ 
+    List(const List<T>& l)
+    {
+        ListNode<T>* cur = l._head;
+        while (cur)
+        {
+            this->PushBack(cur->_data);
+            cur = cur->_next;
+        }
+    }
+ 
+    List<T>& operator=(const List<T>& l)
+    {
+        //先删除节点，再插入节点
+        if (&s != this)
+        {
+            ListNode<T>* pcur = _head;
+            while (pcur)
+            {
+                ListNode<T>* del = pcur;
+                pcur = pcur->_next;
+                delete del;
+                del = NULL;
+            }
+ 
+            ListNode<T>* cur = _head;
+            while (cur)
+            {
+                this->PushBack(cur->_data);
+                cur = cur->_next;
+            }
+        }
+        return *this;
+    }
+ 
+    ~List()//一个节点一个节点的删除
+    {
+        ListNode<T>* cur = _head;
+        while (cur)
+        {
+            ListNode<T>* del = cur;
+            cur = cur->_next;
+            delete del;
+            del = NULL;
+        }
+    }
+ 
+    void PushBack(const T& x);
+    void PopBack();
+    void PopFront();
+    void PrintList();
+    void Reverse();
+    size_t Length();    
+ 
+public:
+    ListNode<T>* _head;
+    ListNode<T>* _tail;
+};
+ 
+ 
+//尾插
+template<class T>
+void List<T>::PushBack(const T& x)
+{
+    //分析：分为两种情况：无节点、有节点
+    if (_head == NULL)
+    {
+        _head = _tail = new ListNode<T>(x);
+    }
+    else
+    {
+        ListNode<T>* cur = new ListNode<T>(x);
+        _tail->_next = cur;
+        cur->_prev = _tail;
+        _tail = cur;
+        _tail->_next = NULL;
+    }
+}
+ 
+//尾删
+template<class T>
+void List<T>::PopBack()
+{
+    //分析：分为三种情况：无节点、一个节点、多个节点
+    if (_head == _tail)
+    {
+        if (_head == NULL)
+        {
+            return;
+        }
+        else
+        {
+            delete _head;
+            _head = _tail = NULL;
+        }
+    }
+    else
+    {
+        ListNode<T>* prev = _tail->_prev;
+        delete _tail;
+        _tail = NULL;
+        _tail = prev;
+        _tail->_next = NULL;
+    }
+}
+ 
+//头删
+template<class T>
+void List<T>::PopFront()
+{
+    if (_head == _tail)
+    {
+        if (_head == NULL)
+        {
+            return;
+        }
+        delete _head;
+        _head = _tail = NULL;
+    }
+    else
+    {
+        ListNode<T>* cur = _head;
+        ListNode<T>* del = _head;    
+        _head = cur->_next;
+        delete del;
+        del = NULL;        
+        _head->_prev = NULL;
+    }
+     
+}
+ 
+//逆置
+template<class T>
+void List<T>::Reverse()
+{
+    //分析：从两头开始走,交换数据（分奇数个数据和偶数个数据）
+    ListNode<T>* begin = _head;
+    ListNode<T>* end = _tail;
+    while (!((begin == end) || end->_next == begin))
+    {
+        swap(begin->_data, end->_data);
+        begin = begin->_next;
+        end = end->_prev;
+    }
+}
+ 
+//长度
+template<class T>
+size_t List<T>::Length()
+{
+    ListNode<T>* cur = _head;
+    int count = 0;
+    while (cur)
+    {
+        ++count;
+        cur = cur->_next;
+    }
+    return count;
+}
+ 
+ 
+//打印
+template<class T>
+void List<T>::PrintList()
+{
+    ListNode<T>* cur = _head;
+    while (cur)
+    {
+        cout << cur->_data << "->";
+        cur = cur->_next;
+    }
+    cout << "NULL" << endl;
+}
+ 
+template<class T, template<class> class Container = List>    //缺省形式
+class Queue
+{
+public:
+    //入队
+    void Push(const T& x)
+    {
+        _con.PushBack(x);
+    }
+ 
+    //出队
+    void Pop()
+    {
+        _con.PopFront();
+    }
+ 
+    //大小
+    size_t Size()
+    {
+        return _con.Length();
+    }
+ 
+    //判空
+    bool Empty()
+    {
+        return Size() == 0;
+    }
+ 
+    //队头
+    T& Front()
+    {
+        size_t size = Size();
+        assert(size > 0);
+        return _con._head->_data;
+    }
+ 
+    //队尾
+    T& Back()
+    {
+        size_t size = Size();
+        assert(size > 0);
+        return _con._tail->_data;
+    }
+ 
+protected:
+    Container<T> _con;
+};
+ 
+ 
+//队列的测试函数
+void TestQueue()
+{
+    Queue<int, List> q1;
+    //Queue<int> q1;
+    q1.Push(1);
+    q1.Push(2);
+    q1.Push(3);
+    q1.Push(4);
+    q1.Push(5);
+ 
+    //访问队列所有元素(队列是插尾删头)
+    while (!q1.Empty())
+    {
+        cout<< q1.Front() << "  ";
+        q1.Pop();
+    }
+}
+ 
+ 
+int main()
+{
+    TestQueue();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+#include<assert.h>
+ 
+template<class T>
+class SeqList
+{
+private:
+    T* _array;
+    size_t _size;
+    size_t _capacity;
+     
+public:
+    SeqList()
+        :_array(NULL)
+        , _size(0)
+        , _capacity(0)
+    {}
+ 
+    SeqList(const SeqList<T>& s)
+    {
+        _array = new T[s._size];
+        for (size_t i = 0; i < s._size; i++)
+        {
+            _array[i] = s._array[i];
+        }
+        _size = s._size;
+        _capacity = s._size;
+    }
+ 
+    SeqList<T>& operator=(SeqList<T> s)
+    {
+        if (&s != this)
+        {
+            swap(_array, s._array);
+            swap(_size, s._size);
+            swap(_capacity, s._capacity);
+        }
+        return *this;
+    }
+ 
+    ~SeqList()
+    {
+        if (_array)
+        {
+            delete[] _array;
+        }
+    }
+ 
+    //扩容
+    void _CheckCapacity(size_t n)
+    {
+        if (n > _capacity)
+        {
+            _capacity = n > 2 * _capacity + 3 ? n : 2 * _capacity + 3;
+            T* tmp = new T[_capacity];
+            if (_array)
+            { 
+                               for (size_t i = 0; i < _size; i++)
+                {
+                    tmp[i] = _array[i];
+                }
+            }
+            delete[] _array;
+            _array = tmp;
+        }
+    }
+ 
+    int Size()
+    {
+        return _size;
+    }
+ 
+    //打印
+    void PrintSeqList()
+    {
+        for (size_t i = 0; i < _size; i++)
+        {
+            cout << _array[i] << "  ";
+        }
+        cout << endl;
+    }
+ 
+    //尾插
+    void PushBack(const T& x)
+    {
+        _CheckCapacity(_size + 1);
+        _array[_size++] = x;
+    }
+ 
+    //尾删
+    void PopBack()
+    {
+        if (_size == 0)
+        {
+            return;
+        }        
+        else
+        {
+            --_size;
+        }
+    }
+ 
+    //operator[]
+    T& operator[](size_t index)
+    {
+        /*assert(index < _size);*/
+        return _array[index];
+    }
+ 
+    //请求空间
+    void Reserve(size_t n)
+    {
+        _CheckCapacity(n);
+    }
+};
+ 
+template<class T, template<class> class Container = SeqList>
+class Stack
+{
+public:
+    //入栈
+    void Push(const T& x)
+    {
+        _con.PushBack(x);
+    }
+ 
+    //出栈
+    void Pop()
+    {
+        _con.PopBack();
+    }
+ 
+    //大小
+    size_t Size()
+    {
+        return _con.Size();
+    }
+ 
+    //判空
+    bool Empty()
+    {
+        return _con.Size() == 0;
+    }
+ 
+    //栈顶
+    T& Top()
+    {
+        size_t size = _con.Size();
+        assert(size > 0);
+        return _con[size - 1];
+ 
+    }
+protected:
+    Container<T> _con;
+};
+ 
+ 
+void TestStack()
+{
+    Stack<int> ss1;
+    ss1.Push(1);
+    ss1.Push(2);
+    ss1.Push(3);
+    ss1.Push(4);
+    ss1.Push(5);
+ 
+    //访问栈中所有元素
+    while (!ss1.Empty())
+    {
+        cout << ss1.Top()<< "  ";
+        ss1.Pop();
+    }    
+}
+ 
+int main()
+{
+    TestStack();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+ 
+template<class T>
+struct ListNode
+{
+    ListNode(const T& x)
+    :_next(NULL)
+    , _prev(NULL)
+    , _data(x)
+    {}
+ 
+    ListNode<T>* _next;
+    ListNode<T>* _prev;
+    T _data;
+}; 
+ 
+template<class T>
+class List
+{
+public:
+    List()
+        :_head(NULL)
+        , _tail(NULL)
+    {}
+ 
+    List(const List<T>& l)
+    {
+        ListNode<T>* cur = l._head;
+        while (cur)
+        {
+            this->PushBack(cur->_data);
+            cur = cur->_next;
+        }
+    }
+ 
+    List<T>& operator=(const List<T>& l)
+    {
+        //先删除节点，再插入节点
+        if (&s != this)
+        {
+            ListNode<T>* pcur = _head;
+            while (pcur)
+            {
+                ListNode<T>* del = pcur;
+                pcur = pcur->_next;
+                delete del;
+                del = NULL;                
+            }
+ 
+            ListNode<T>* cur = _head;
+            while (cur)
+            {
+                this->PushBack(cur->_data);
+                cur = cur->_next;
+            }
+        }
+        return *this;
+    }
+ 
+    ~List()//一个节点一个节点的删除
+    {
+        ListNode<T>* cur = _head;
+        while (cur)
+        {
+            ListNode<T>* del = cur;
+            cur = cur->_next;
+            delete del;
+            del = NULL;
+        }
+    }
+     
+    void PushBack(const T& x);
+    void PopBack();
+    void Unique();
+    void PrintList();
+    void Reverse();
+    int Length();
+    void Sort();
+     void Merge(List<T>& l2);
+ 
+protected:
+    ListNode<T>* _head;
+    ListNode<T>* _tail;
+};
+ 
+ 
+//尾插
+template<class T>
+void List<T>::PushBack(const T& x)
+{
+    //分析：分为两种情况：无节点、有节点
+    if (_head == NULL)
+    {
+        _head = _tail = new ListNode<T>(x);
+    }
+    else
+    {
+        ListNode<T>* cur = new ListNode<T>(x);
+        _tail->_next = cur;
+        cur->_prev = _tail;
+        _tail = cur;
+        _tail->_next = NULL;
+    }
+}
+ 
+//尾删
+template<class T>
+void List<T>::PopBack()
+{
+    //分析：分为三种情况：无节点、一个节点、多个节点
+    if (_head == _tail)
+    {
+        if (_head == NULL)
+        {
+            return;
+        }
+        else
+        {
+            delete _head;
+            _head = _tail = NULL;
+        }
+    }
+    else
+    {
+        ListNode<T>* prev = _tail->_prev;
+        delete _tail;
+        _tail = NULL;
+        _tail = prev;
+        _tail->_next = NULL;
+    }
+}
+ 
+//去重:前提是针对已排序的有重复数据的链表
+//template<class T>
+//void List<T>::Unique()
+//{
+//    //分析：分为三种情况：无节点一个节点（无需删除节点）、两个节点、两个以上节点
+//    if (_head == _tail)
+//    {
+//        return;    
+//    }
+//    else
+//    {
+//        ListNode<T>* pcur = _head;
+//        ListNode<T>* pnext = _head->_next;
+//        if (pnext->_next == NULL)    //两个节点
+//        {
+//            if (pcur->_data == pnext->_data)
+//            {
+//                delete pnext;
+//                pnext = NULL;
+//                _tail = _head = pcur;
+//                return;
+//            }
+//            else
+//            {
+//                return;
+//            }            
+//        }
+//        else
+//        {
+//            //两个以上节点
+//            ListNode<T>* cur = _head;
+//            while (cur->_next)
+//            {
+//                ListNode<T>* next = cur->_next;
+//                ListNode<T>* nextnext = next->_next;
+//                if (cur->_data == next->_data)
+//                {
+//                    cur->_next = nextnext;
+//                     nextnext->_prev = cur;
+//                    delete next;
+//                    next = NULL;
+//                }
+//                cur = cur->_next;
+//            }
+//        }                                     
+//    }    
+//}
+ 
+//逆置
+template<class T>
+void List<T>::Reverse()
+{
+    //分析：从两头开始走,交换数据（分奇数个数据和偶数个数据）
+    ListNode<T>* begin = _head;
+    ListNode<T>* end = _tail;
+    while (!((begin == end) || end->_next == begin))
+    {
+        swap(begin->_data, end->_data);
+        begin = begin->_next;
+        end = end->_prev;
+    }
+}
+ 
+//长度
+template<class T>
+int List<T>::Length()
+{
+    ListNode<T>* cur = _head;
+    int count = 0;
+    while (cur)
+    {
+        count++;
+        cur = cur->_next;
+    }
+    return count;
+}
+ 
+//分类
+template<class T>
+void List<T>::Sort()
+{
+    //使用冒泡排序,实现升序或者降序
+    ListNode<T>* i = _head;
+    while (i != _tail)
+    {
+        ListNode<T>* j = _head;
+        ListNode<T>* end = _tail;
+        while (j != end)
+        {
+            if (j->_data >(j->_next)->_data)
+            {
+                swap(j->_data, (j->_next)->_data);
+            }
+            j = j->_next;
+             
+        }
+        end = end->_prev;
+        i = i->_next;
+    }
+}
+ 
+//合并
+template<class T>
+void List<T>::Merge(List<T>& l2)
+{
+    ListNode<T>* cur1 = _head;
+    ListNode<T>* cur2 = l2._head;
+    if (cur1->_data > cur2->_data)
+    {
+        swap(cur1->_data, cur2->_data);
+    }
+    while (cur1 && cur2)
+    {
+        if (cur1->_data <= cur2->_data)
+        {
+            cur1 = cur1->_next;
+        }
+        else
+        {
+            ListNode<T>* tmp = cur2;
+            cur2 = cur2->_next;
+            ListNode<T>* prev = cur1->_prev;
+             
+            cur1->_prev = tmp;
+            tmp->_next = cur1;
+ 
+            prev->_next = tmp;
+            tmp->_prev = prev;
+        }
+    }
+    if (cur1 == NULL)
+    {
+        _tail->_next = cur2;
+        cur2->_prev = _tail;
+        _tail = l2._tail;
+    }
+}
+ 
+//打印
+template<class T>
+void List<T>::PrintList()
+{
+    ListNode<T>* cur = _head;
+    while (cur)
+    {
+        cout << cur->_data << "->";
+        cur = cur->_next;
+    }
+    cout << "NULL" << endl;
+}
+ 
+ 
+void Test()
+{
+    List<int> l1;
+    l1.PushBack(1);
+    l1.PushBack(3);
+    l1.PushBack(5);
+    l1.PushBack(7);
+    l1.PrintList();
+ 
+    l1.PopBack();
+    l1.PrintList();
+ 
+    /*l1.Unique();
+    l1.PrintList();*/
+ 
+    List<int> l2;
+    l2.PushBack(2);
+    l2.PushBack(4);
+    l2.PushBack(6);
+    l1.Merge(l2);
+    l1.PrintList();
+ 
+    l1.Reverse();
+    l1.PrintList();
+ 
+    l1.Sort();
+    l1.PrintList();
+ 
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+#include<string>
+ 
+template <class T>
+bool IsEqual(const T& left, const T& right)
+{
+    return left == right;
+}
+ 
+template<class T1,class T2>
+bool IsEqual(const T1& left,const T2& right)
+{
+    return left == right;
+}
+ 
+bool IsEqual(const string& left, const string& right)
+{
+    return left == right;
+}
+ 
+ 
+void Test()
+{
+    string s1("s1");
+    string s2("s2");
+    cout << IsEqual(s1, s2) << endl;
+    cout << IsEqual(1, 1) << endl;
+    cout << IsEqual<int>(1, 1.2) << endl;
+    cout << IsEqual<double>(1, 1.2) << endl;
+}
+typedef int DataType;    //此时我定义的是int型
+ 
+class SeqList
+{
+    DataType* _array;
+    size_t _size;
+    size_t _capacity;
+}
+void Test()
+{
+    SeqList s1;    //此时s1我想定义成为char型
+    SeqList s2;    //此时s2我想定义成为非char型
+}
+#include<iostream>
+using namespace std;
+#include<string>
+#include<assert.h>
+ 
+template<class T>
+ 
+class SeqList
+{
+private:
+    T* _array;
+    size_t _size;
+    size_t _capacity;
+     
+public:
+    SeqList()
+        :_array(NULL)
+        , _size(0)
+        , _capacity(0)
+    {}
+ 
+    SeqList(const SeqList<T>& s)
+    {
+        _array = new T[s._size];
+        for (size_t i = 0; i < s._size; i++)
+        {
+            _array[i] = s._array[i];
+        }
+        _size = s._size;
+        _capacity = s._size;
+    }
+ 
+    SeqList<T>& operator=(SeqList<T> s)
+    {
+        if (&s != this)
+        {
+            swap(_array, s._array);
+            swap(_size, s._size);
+            swap(_capacity, s._capacity);
+        }
+        return *this;
+    }
+ 
+    ~SeqList()
+    {
+        if (_array)
+        {
+            delete[] _array;
+        }
+    }
+ 
+    //扩容
+    void _CheckCapacity(size_t n)
+    {
+        if (n > _capacity)
+        {
+            _capacity = n > 2 * _capacity + 3 ? n : 2 * _capacity + 3;
+            /*_array = (T*)realloc(_array, sizeof(T)* _capacity);*/
+            //不可行！realloc对于自定义类型未调用构造函数初始化对象，随机值会崩溃。
+             
+            T* tmp = new T[_capacity];
+            if (_array)
+            {
+                /*memcpy(tmp, _array, sizeof(T)* _size);*/
+                //不可行！对于长字符串重新开辟空间拷贝析构两次崩溃
+                for (size_t i = 0; i < _size; i++)
+                {
+                    tmp[i] = _array[i];
+                }
+            }
+            delete[] _array;
+            _array = tmp;
+        }
+    }
+ 
+    //打印
+    void PrintSeqList()
+    {
+        for (size_t i = 0; i < _size; i++)
+        {
+            cout << _array[i] << "  ";
+        }  
+        cout << endl;
+    }
+ 
+    //尾插
+    void PushBack(const T& x)
+    {
+        _CheckCapacity(_size + 1);
+        _array[_size++] = x;
+    }
+ 
+    //operator[]
+    T& operator[](size_t index)
+    {
+        assert(index < _size);
+        return _array[index];
+    }
+ 
+    //请求空间
+    void Reserve(size_t n)
+    {
+        _CheckCapacity(n);
+    }
+};
+ 
+void Test()
+{
+    SeqList<int> s1;
+    s1.PushBack(1);
+    s1.PushBack(2);
+    s1.PushBack(3);
+    s1.PushBack(4);
+    s1.PushBack(5);
+    s1.PrintSeqList();
+ 
+    SeqList<string> s2;
+    s2.PushBack("xxx");
+    s2.PushBack("xxx");
+    s2.PushBack("xxx");
+    s2.PushBack("xxx");
+    s2.PushBack("xxx");
+    s2.PrintSeqList();
+             
+    SeqList<string> s3(s2);
+    s3[0] = "yyy";
+    s3.PrintSeqList();    
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+实现基类（父类）以及派生类（子类），验证继承与转换--赋值兼容规则:
+
+子类对象可以赋值给父类对象（切割/切片）
+父类对象不能赋值给子类对象
+父类的指针/引用可以指向子类对象
+子类的指针/引用不能指向父类对象（可以通过强制类型转换完成）
+#include<iostream>
+using namespace std;
+ 
+class People    //父类或者基类
+{
+public:
+    void Display()
+    {
+        cout << "_name" << endl;
+    }
+protected:
+    string _name;
+};
+ 
+ 
+class Student:public People        //子类或者派生类
+{
+protected:
+    int _num;
+};
+ 
+ 
+void Test()
+{
+    People p;
+    Student s;
+    p = s;    //切片
+    //s = p;    //无法通过，说明父类对象不可以赋值给子类对象
+    People* p1 = &s;    //父类的指针和引用可以指向子类
+    People& p2 = s;
+ 
+    //Student* s1 = &p;    //子类的指针和引用不可以指向父类
+    //Student& s2 = p;
+    Student* s1 = (Student*)&p;    //可以通过强转实现
+    Student& s2 = (Student&)p;
+ 
+    //p2->_num = 10;    //_num是子类对象，要越界父类对象才能访问到子类对象
+    //s2._num = 20;
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+
+    如何书写基类与派生类的默认成员函数呢？如：构造函数、拷贝构造函数、赋值运算符重载、析构函数。
+  
+#include<iostream>
+using namespace std;
+ 
+class People
+{
+public:
+    People(const char* name)
+        :_name(name)
+    {
+        cout << "People()" << endl;
+    }
+ 
+    People(const People& p)
+        :_name(p._name)
+    {
+        cout << "People(const People& p)" << endl;
+    }
+ 
+    People& operator=(const People& s)
+    {
+        if (&s != this)
+        {
+            cout << "People& operator= (const People& s)"<<endl;
+            _name = s._name;
+        }
+        return *this;
+    }
+ 
+    ~People()
+    {
+        cout << "~People()" << endl;
+    }
+ 
+protected:
+    string _name;
+};
+ 
+class Student:public People
+{
+public:
+    Student(const char* name, int num)
+        :People(name)
+        , _num(num)
+    {
+        cout << "Student()" << endl;
+    }
+ 
+    Student(const Student& s)
+        :People(s)
+        , _num(s._num)
+    {
+        cout << "Student(const Student& s)" << endl;
+    }
+     
+    Student& operator= (const Student& s)
+    {
+        if (this != &s)
+        {
+            cout << "Student& opeartor= (const Student& s)" << endl;
+            People::operator=(s);
+            _num = s._num;
+        }
+        return *this;
+    }
+ 
+    ~Student()
+    {
+        cout << "~Student()" << endl;
+    }
+protected:
+    int _num;
+};
+ 
+void Test()
+{
+    Student s1("张三",15);
+    Student s2(s1);
+    Student s3("李四",12);
+    s3 = s1;
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#include<iostream>
+using namespace std;
+ 
+class People
+{
+public:
+    virtual void BuyTickets()
+    {
+        cout << "买票" << endl;
+    }
+};
+ 
+class Student :public People
+{
+public:
+    virtual void BuyTickets()
+    {
+        cout << "买票-半价" << endl;
+    }
+};
+ 
+void Fun(People& p)
+{
+    p.BuyTickets();
+}
+ 
+void Test()
+{
+    People p;
+    Student s;
+    Fun(p);//People为父类，则调用父类的虚函数。
+    Fun(s);//调用子类的虚函数。
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#ifndef __LIST_H__
+#define __LIST_H__
+ 
+#include<stdio.h>
+#include<assert.h>
+#include<stdlib.h>
+ 
+typedef int DataType;
+ 
+typedef struct ListNode
+{
+    DataType data;
+    struct ListNode* next;
+}ListNode;
+ 
+//创建节点
+ListNode* _BuyNode(DataType x)
+{
+    ListNode* tmp = (ListNode*)malloc(sizeof(ListNode));
+    tmp->data = x;
+    tmp->next = NULL;
+    return tmp;
+}
+ 
+//尾插
+void PushBack(ListNode* & head, DataType x)
+{
+    //0节点       不为0节点
+    /*assert(head);*/
+    if (head == NULL)
+    {
+        head = _BuyNode(x);
+        head->next = NULL;
+    }
+    else
+    {
+        ListNode* newNode = _BuyNode(x);
+        ListNode* cur = head;
+        while (cur->next)
+        {
+            cur = cur->next;
+        }
+        ListNode* tail = cur;
+        tail->next = newNode;
+        tail = newNode;
+        tail->next = NULL;
+    }
+}
+ 
+//尾删
+void PopBack(ListNode* & head)
+{
+    //0节点、1节点、多节点
+    if (head == NULL)
+    {
+        return;
+    }
+    ListNode* cur = head;
+    while (cur)
+    {    
+        if (cur->next == NULL)    //1节点情况
+        {
+            delete cur;
+            cur = NULL;
+            head = NULL;
+        }
+        else
+        {
+            ListNode* next = cur->next;
+            if (next->next == NULL)
+            {
+                ListNode* tail = next;
+                free(tail);
+                tail = NULL;
+                tail = cur;
+                tail->next = NULL;
+                break;
+            }
+            cur = cur->next;
+        }    
+    }
+}
+ 
+//头插
+void PushFront(ListNode* & head, DataType x)
+{
+    //0节点  1节点、多节点
+    if (head == NULL)    //0节点
+    {
+        PushBack(head,x);
+    }
+    else
+    {
+        ListNode* cur = head;                    
+        ListNode* newNode = _BuyNode(x);
+        newNode->next = head;
+        head = newNode;            
+    }
+}
+ 
+//头删
+void PopFront(ListNode* & head)
+{
+    //0节点  1节点    多节点
+    if (head == NULL)    //0节点
+    {
+        PopBack(head);
+    }
+    else if ((head != NULL) && (head->next == NULL))
+    {
+        free(head);
+        head = NULL;
+    }
+    else
+    {
+        ListNode* del = head;
+        ListNode* cur = head->next;
+        head = cur;
+        free (del);
+        del = NULL;
+    }
+}
+ 
+//删除节点
+void Erase(ListNode* & head, ListNode* pos)
+{
+    assert(pos);
+    if (pos == head)    //首节点处
+    {
+        PopFront(head);
+    }
+    else
+    {
+        ListNode* cur = head;    
+        while (cur)
+        {
+            ListNode* next = cur->next;
+            ListNode* nextnext = next->next;
+            if (cur->next == NULL)    //尾节点处
+            {
+                PopBack(cur);
+                break;
+            }                    
+            else if (next == pos)    //中间节点处
+            {
+                cur->next = nextnext;
+                free(next);
+                next = NULL;            
+                break;
+            }
+             
+            cur = cur->next;
+        }
+    }
+}
+ 
+//查找节点
+ListNode* Find(ListNode* & head, DataType x)
+{
+    ListNode* cur = head;
+    while (cur)
+    {
+        if (cur->data == x)
+        {
+            return cur;
+        }
+        cur = cur->next;
+    }
+    return NULL;
+}
+ 
+//打印节点
+void PrintList(ListNode* & head)
+{
+    ListNode* cur = head;
+    while (cur)
+    {
+        printf("%d->", cur->data);
+        cur = cur->next;
+    }
+    printf("NULL\n");
+}
+ 
+ 
+void Test()
+{
+    ListNode* s = NULL;
+ 
+    PushBack(s, 1);
+    PushBack(s, 2);
+    PushBack(s, 3);
+    PushBack(s, 4);
+    PushBack(s, 5);
+    PrintList(s);
+ 
+    PopBack(s);
+    PrintList(s);
+ 
+    PushFront(s, 0);
+    PrintList(s);
+ 
+    PopFront(s);
+    PrintList(s);
+ 
+    ListNode* p = s->next;
+    Erase(s, p);
+    PrintList(s);
+ 
+    ListNode* ret = Find(s, 3);
+    printf("%d\n", ret->data);
+ 
+}
+#endif    //__LIST_H__
+
+#ifndef __SLISH_H__
+#define __SLIST_H__
+ 
+#include<iostream>
+using namespace std;
+ 
+ 
+typedef int DataType;
+ 
+class SlistNode
+{
+    friend class Slist;
+public:
+    SlistNode(DataType x)
+        :_next(NULL)
+        , _data(x)
+    {}
+private:
+    DataType _data;
+    SlistNode* _next;
+};
+ 
+ 
+class Slist
+{
+public:
+    Slist()
+        :_head(NULL)
+        , _tail(NULL)
+    {}
+ 
+    Slist(const Slist& s)
+        :_head(NULL)
+        , _tail(NULL)
+    {
+        SlistNode* cur = s._head;
+        while (cur)
+        {
+            this->PushBack(cur->_data);
+            cur = cur->_next;
+        }
+    }
+ 
+    Slist& operator= (const Slist& s)
+    {
+        Slist tmp;
+        SlistNode* pcur = _head;
+        while (pcur)
+        {
+            SlistNode* del = pcur;
+            pcur = pcur->_next;
+            delete del;
+            del = NULL;
+        }
+        tmp = s;
+        SlistNode* cur = s._head;
+        while (cur)
+        {
+            this->PushBack(cur->_data);
+            cur = cur->_next;
+        }    
+    }
+ 
+    ~Slist()
+    {
+        SlistNode* cur = _head;
+        while (cur)
+        {
+            SlistNode* del = cur;
+            cur = cur->_next;
+            delete del;
+            del = NULL;
+        }
+    }
+ 
+    void PushBack(DataType x)
+    {
+        //0  1多
+        if (_head == NULL)
+        {
+            _head = new SlistNode(x);
+            _tail = _head;
+        }
+        else
+        {
+            /*_tail->_next = new SlistNode(x);
+            _tail = _tail->_next;    */    
+            SlistNode* cur = new SlistNode(x);
+            _tail->_next = cur;
+            _tail = cur;
+        }
+    }
+ 
+    void PopBack()
+    {
+        if (_head == _tail)
+        {
+            if (_head == NULL)
+            {
+                return;
+            }
+            else
+            {
+                delete _head;
+                _head = NULL;
+                _tail = NULL;
+            }
+        }
+        else
+        {
+            SlistNode* cur = _head;
+            while (cur)
+            {
+                SlistNode* _next = cur->_next;
+                if (_next == _tail)
+                {
+                    delete _tail;
+                    _tail = NULL;
+                    _tail = cur;
+                    _tail->_next = NULL;
+                }
+                cur = cur->_next;
+            }
+        }
+    }
+ 
+    void PrintSlist()
+    {
+        if (_head== NULL)
+        {
+            return;
+        }
+        else
+        {
+            SlistNode* cur = _head;
+            while (cur)
+            {
+                cout << cur->_data << " ";
+                cur = cur->_next;
+            }
+            cout << endl;
+        }
+ 
+    }
+private:
+    SlistNode* _head;
+    SlistNode* _tail;
+};
+ 
+ 
+void Test()
+{
+    Slist s;
+    s.PushBack(1);
+    s.PushBack(2);
+    s.PushBack(3);
+    s.PushBack(4);
+    s.PushBack(5);
+    s.PrintSlist();
+ 
+    s.PopBack();
+    s.PrintSlist();
+ 
+}
+ 
+#endif    //__SLIST_H__
+
+#include<iostream>
+#include<stdlib.h>
+using namespace std;
+ 
+class String
+{
+public:
+    //构造函数是用系统传入的str去构造_STR
+    String(char* str = "")
+        :_str( new char[strlen(str) + 1])
+    {
+        strcpy(_str, str);
+    }
+ 
+    //拷贝构造是将已存在的String s 类中的_str去构造_str。
+    String(String& s)
+        :_str(new char[strlen(s._str) + 1])
+    {
+        strcpy(_str, s._str);
+    }
+ 
+    //复制运算符重载已存在的String s 类中的_str去赋值给tmp。
+    //String& operator = (const String& s)
+    //{
+    //    if (&s != this) 
+    //    {
+    //        delete[] _str;
+    //        char* tmp = new char[strlen(s._str) + 1];
+    //        strcpy(tmp, s._str);
+    //    }
+    //    return *this;
+    //}
+ 
+ 
+    String& operator = (const String& s)
+    {
+        if (&s != this)
+        {
+            char* tmp = new char[strlen(s._str) + 1];
+            strcpy(tmp, s._str);
+ 
+            //先释放后指向，否则_str无人管理会内存泄漏
+            delete[] _str;
+            _str = tmp;
+        }
+        return *this;
+    }
+ 
+    ~String()
+    {
+        if (_str)
+        {
+            delete[] _str;
+        }
+    }
+ 
+private:
+    char* _str;    
+};
+ 
+ 
+void Test()
+{
+    String s1("s1");
+    String s2(s1);
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+}
+
+#include<iostream>
+#include<stdlib.h>
+ 
+using namespace std;
+ 
+class String
+{
+public:
+    String(char* str = "")
+        :_str(new char[strlen(str) + 1])
+    {
+        strcpy(_str, str);
+    }
+ 
+    String(const String& s)
+        :_str(NULL)
+    {
+        String tmp = s._str;
+        swap(tmp._str, _str);
+    }
+ 
+    String& operator = (const String& s)
+    {
+        if (&s != this)
+        {
+            String tmp = s._str;
+            swap(tmp._str, _str);
+        }
+        return *this;
+     }
+     
+ 
+    ~String()
+    {
+        if (_str)
+        {
+            delete[] _str;
+        }
+    }
+private:
+    char* _str;
+};
+ 
+ 
+void Test()
+{
+    String s1("s1");
+    String s2(s1);
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+}
+#include<stdio.h>
+#include<stdlib.h>
+#include<iostream>
+using namespace std;
+ 
+class String
+{
+public:
+    String(char* str = "")
+        :_str(new char[strlen(str) + 5])
+    {
+        *(int*)_str = 1;
+        _str += 4;
+        strcpy(_str, str);
+    }
+ 
+    String(const String& s)
+        :_str(s._str)
+    {
+        ++(*(int*)(_str - 4));
+    }
+ 
+    //重载=
+    String& operator= (const String& s)
+    {
+        if (s._str != _str)
+        {    
+            Release();
+            _str = s._str;
+        }
+        return *this;
+    }
+ 
+    //重载[]
+    char& operator[] (size_t index)
+    {
+        if (GetRefCount(_str) >1)
+        {
+            char* tmp = new char[strlen(_str) + 5];
+            tmp += 4;
+            GetRefCount(tmp) = 1;
+            strcpy(tmp, _str);
+            --(GetRefCount(_str));
+            _str = tmp;
+ 
+        }
+        return _str[index];
+ 
+    }
+ 
+    ~String()
+    {
+        Release();
+    }
+ 
+void Release()
+{
+    if (*(int*)(_str) == 0)
+    {
+        delete[] (_str - 4);//指针返回首地址位置，释放整段空间
+    }
+}
+ 
+int& GetRefCount(char* str)
+{
+    return *(int*)(_str - 4);
+}
+ 
+private:
+    char* _str;
+};
+ 
+ 
+void Test()
+{
+    String s1("xxxxxxxxxxxxxx");
+    String s2(s1);
+    s2 = s1;
+ 
+    String s3("yyyyyyy");
+    String s4(s3);
+    s4 = s3;
+ 
+    s3 = s1;
+ 
+    s3[0] = 'S';
+}
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#include<stdio.h>
+#include<iostream>
+#include<stdlib.h>
+#include<assert.h>
+using namespace std;
+ 
+ 
+class String
+{
+public:
+    String(char* str = "")
+        :_str(new char[strlen(str) + 1])
+        , _pRefCount(new int(1))
+    {
+        strcpy(_str, str);
+    }
+ 
+    String(String& s)
+        :_str(s._str)
+        , _pRefCount(s._pRefCount)
+    {
+        ++(*_pRefCount);
+    }
+ 
+    String& operator=(const String& s)
+    {
+        /*if(_str != s.str)
+        {
+            if (--(*_pRefCount) == 0)
+            {
+                delete[] _str;
+                delete _pRefCount;
+            }
+            _str = s._str;
+            _pRefCount = s._pRefCount;
+            ++(*_pRefCount);
+        }
+        return *this;*/
+ 
+        if (_str != s._str)
+        {
+            if (--(*_pRefCount) == 0)
+            {
+                Release();
+            }
+            _str = s._str;
+            _pRefCount = s._pRefCount;
+            ++(*_pRefCount);
+        }
+        return *this;
+    }
+ 
+    ~String()
+    {
+        /*if (--(*_pRefCount) == 0)
+        {
+            delete[] _str;
+            delete _pRefCount;
+        }*/
+        Release();
+    }
+ 
+void Release()
+{
+ 
+    if (--(*_pRefCount) == 0)
+    {
+        delete[] _str;
+        delete _pRefCount;
+    }
+}
+ 
+//与测试函数2对应
+int GetRefCount()
+{
+    return (*_pRefCount);
+}
+ 
+private:
+    int* _pRefCount;
+    char* _str;
+};
+ 
+//测试函数1：监视查看
+//void Test()
+//{
+//    String s1("xxxxxxxxxxxxxxxxx");
+//    String s2(s1);
+//    s2 = s1;
+//
+//    String s3("yyyyyyyyyyyyy");
+//    String s4(s3);
+//
+//    s1 = s3;
+//}
+ 
+//测试函数2：手动书写函数GetRefCount返回引用计数，断言方法判断是否一致
+void Test()
+{
+    String s1("xxxxxxxxxxxxxxxxx");
+    String s2(s1);
+    s2 = s1;
+ 
+    assert(s1.GetRefCount() == 2);
+    assert(s2.GetRefCount() == 2);
+ 
+    String s3("yyyyyyyyyyyyy");
+    String s4(s3);
+ 
+    s1 = s3;
+    assert(s1.GetRefCount() == 3);
+    assert(s2.GetRefCount() == 1);
+    assert(s3.GetRefCount() == 3);
+    assert(s4.GetRefCount() == 3);
+}
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+ 
+typedef enum ConvertState
+{
+    SUCCESS,
+    FILE_ERROR,
+    NO_MATCH,
+}ConvertState;
+ 
+typedef enum State
+{
+    C_BEGIN,
+    C_END,
+    CPP_BEGIN,
+    CPP_END,
+ 
+}State;
+ 
+ConvertState Convert(FILE* fIn, FILE* fOut)
+{
+    ConvertState ret = SUCCESS;
+ 
+    char first, second;
+    State tag = C_END;
+    assert(fIn);
+    assert(fOut);
+    do
+    {
+        first = fgetc(fIn);
+        switch (first)
+        {
+        case '/':
+            second = fgetc(fIn);
+            if (second == '*')
+            {
+                if (tag == C_END)
+                {
+                    fputc('/', fOut);
+                    fputc('/', fOut);
+ 
+                    tag = C_BEGIN;
+                }
+                else
+                {
+                    fputc('/', fOut);
+                    fputc('*', fOut);
+                }
+            }
+            else if (second == '/')
+            {
+                char next;
+                fputc('/', fOut);
+                fputc('/', fOut);
+ 
+                do
+                {
+                    next = fgetc(fIn);
+                    fputc(next, fOut);
+ 
+                    if (next == EOF)
+                    {
+                        return ret;
+                    }
+                } while (next != '\n');
+            }
+            else
+            {
+                fputc(first, fOut);
+                fputc(second, fOut);
+ 
+            }
+            break;
+        case '\n'://多行注释问题
+            fputc('\n', fOut);
+ 
+            if (tag == C_BEGIN)
+            {
+                fputc('/', fOut);
+                fputc('/', fOut);
+            }
+            break;
+        case '*':
+            second = fgetc(fIn);
+            if (second == '/')
+            {
+                //换行问题
+                char next = fgetc(fIn);
+ 
+                //连续注释问题
+                if (next == '/')
+                {
+                    fputc('\n', fOut);
+                    fseek(fIn, -1, SEEK_CUR);
+                }
+                else if (next != '\n' && next != EOF)
+                {
+                    fputc('\n', fOut);
+                    fputc(next, fOut);
+                }
+                else
+                {
+                    fputc('\n', fOut);
+                }
+ 
+                tag = C_END;
+            }
+            else if (second == '*')
+            {
+                fputc(first, fOut);
+                fseek(fIn, -1, SEEK_CUR);
+            }
+            else
+            {
+                fputc(first, fOut);
+                fputc(second, fOut);
+            }
+            break;
+        default:
+            if (first != EOF)
+                fputc(first, fOut);
+ 
+            break;
+        }
+    } while (first != EOF);
+    if (tag != C_END)
+    {
+        ret = NO_MATCH;
+    }
+    return ret;
+}
+ 
+ConvertState AnnotationConvert(const char* inputFile, const char* outputFile)
+{
+    ConvertState ret;
+    FILE* fIn, *fOut;
+    fIn = fopen(inputFile, 'r');
+    if (inputFile == NULL)
+    {
+        printf("打开文件%s失败, errno: %d\n", inputFile, errno);
+        return FILE_ERROR;
+    }
+ 
+    fOut = fopen(outputFile, 'w');
+    if (outputFile == NULL)
+    {
+        fclose(fIn);
+        printf("打开文件%s失败，errno: %d\n", outputFile, errno);
+        return FILE_ERROR;
+    }
+ 
+    ret = convert(fIn,fOut);
+    fclose(fIn);
+    fclose(fOut);
+ 
+    return ret;
+}
+int main()
+{
+     
+}
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<string.h>
+#include<malloc.h>
+typedef int DateType;
+typedef struct SeqList
+{
+    DateType *arr;
+    size_t capacility;
+    size_t size;
+}SeqList;
+ 
+//创建空间
+void CheckCapa(SeqList *Seq)
+{
+    assert(Seq);
+    if (Seq->size >= Seq->capacility)
+    {
+        Seq->capacility = 2 * Seq->capacility + 3;
+        Seq->arr = (DateType*)realloc(Seq->arr, Seq->capacility * sizeof(DateType));
+    }
+}
+ 
+//初始化动态顺序表
+void initSeqList(SeqList *Seq)
+{
+    Seq->arr = NULL/* malloc(sizeof(DateType) * 3)*/;
+    Seq->capacility = 0;
+    Seq->size = 0;
+}
+ 
+//销毁空间
+void DestroySeq(SeqList *Seq)
+{
+     
+    Seq->capacility = 0;
+    Seq->size = 0;
+    free(Seq->arr);
+    Seq->arr = NULL;
+ 
+}
+ 
+ 
+//尾插
+void PushBack(SeqList *Seq,DateType x)
+{
+    assert(Seq);
+    CheckCapa(Seq);
+     
+    Seq->arr[Seq->size++] = x;
+}
+ 
+ 
+//插入
+void Insert(SeqList *Seq,size_t pos, DateType x)
+{
+    assert(Seq);
+    assert(pos < Seq->size);
+    CheckCapa(Seq);
+//思路：插入时将pos+1之后元素往后移腾出一个位置，pos位置放入x。
+//鉴于标号从0开始，先移动再加加size。
+    int index = Seq->size;
+    for (; index >= pos + 1;index--)
+    {
+        Seq->arr[index] = Seq->arr[index - 1];
+    }
+    Seq->arr[pos] = x;
+    Seq->size++;
+}
+ 
+//查找
+int Find(SeqList *Seq, DateType x)
+{
+    assert(Seq);
+    int index = 0;
+    for (; index < Seq->size; index++)
+    {
+        if (Seq->arr[index] == x)
+        {
+            return index;
+        }
+    }
+    return -1;
+}
+ 
+ 
+//打印动态顺序表
+void PrintSeq(SeqList *Seq)
+{
+    assert(Seq);
+    int index = 0;
+    if (Seq->size == 0)
+    {
+        printf("当前顺序表为空！\n");
+        return;
+    }
+    for (index = 0; index < Seq->size; index++)
+    {
+        printf("%d->", Seq->arr[index]);
+    }
+ 
+    printf("\n");
+}
+ 
+ 
+void Test()
+{
+    SeqList Seq;
+    initSeqList(&Seq);
+    PushBack(&Seq, 1);
+    PushBack(&Seq, 2);
+    PushBack(&Seq, 3);
+    PushBack(&Seq, 4);
+    PrintSeq(&Seq);
+ 
+    Insert(&Seq, 2, 10);
+    PrintSeq(&Seq);
+ 
+    int ret = Find(&Seq, 20);
+    if (ret == -1)
+    {
+        printf("not exist!\n");
+    }
+    else
+    {
+        printf("%d\n");
+    }
+    DestroySeq(&Seq);
+}
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<string.h>
+#include<malloc.h>
+ 
+typedef int DateType;
+ 
+typedef struct SeqList
+{
+    DateType *arr;
+    size_t capacility;
+    size_t size;
+}SeqList;
+ 
+ 
+//创建空间
+void CheckCapa(SeqList *Seq)
+{
+    assert(Seq);
+    if (Seq->size >= Seq->capacility)
+    {
+        Seq->capacility = 2 * Seq->capacility + 3;
+        Seq->arr = (DateType*)realloc(Seq->arr, Seq->capacility * sizeof(DateType));
+    }
+}
+ 
+ 
+//初始化动态顺序表
+void initSeqList(SeqList *Seq)
+{
+    Seq->arr = NULL/* malloc(sizeof(DateType) * 3)*/;
+    Seq->capacility = 0;
+    Seq->size = 0;
+}
+ 
+ 
+//销毁空间
+void DestroySeq(SeqList *Seq)
+{ 
+    Seq->capacility = 0;
+    Seq->size = 0;
+    free(Seq->arr);
+    Seq->arr = NULL;
+}
+ 
+ 
+//尾插
+void PushBack(SeqList *Seq,DateType x)
+{
+    assert(Seq);
+    CheckCapa(Seq);
+     
+    Seq->arr[Seq->size++] = x;
+}
+ 
+//尾删
+void PopBack(SeqList *Seq)
+{
+    assert(Seq);
+    if (Seq->size <= 0)
+    {
+        printf("当前顺序表为空！无法继续删除\n");
+        return;
+    }
+    --Seq->size;
+    printf("\n");
+}
+ 
+ 
+//打印动态顺序表
+void PrintSeq(SeqList *Seq)
+{
+    assert(Seq);
+    int index = 0;
+    if (Seq->size == 0)
+    {
+        printf("当前顺序表为空！\n");
+        return;
+    }
+    for (index = 0; index < Seq->size; index++)
+    {
+        printf("%d->", Seq->arr[index]);
+    }
+    printf("\n");
+}
+ 
+ 
+void Test()
+{
+    SeqList Seq;
+    initSeqList(&Seq);
+    PushBack(&Seq,1);
+    PushBack(&Seq, 2);
+    PushBack(&Seq, 3);
+    PushBack(&Seq, 4);
+    PrintSeq(&Seq);
+ 
+    PopBack(&Seq);
+    PrintSeq(&Seq);
+ 
+    DestroySeq(&Seq);
+}
+ 
+ 
+int main()
+{
+    Test();
+    system("pause");
+    return 0;
+}
+
+【单链表】在无头单链表的一个非头节点前插入一个节点
+
+#include<stdio.h>
+#include<assert.h>
+#include<stdlib.h>
+ 
+typedef int DataType;
+ 
+typedef struct SListNode
+{
+    DataType data;
+    struct SListNode* next;
+}SListNode;
+ 
+SListNode* BuyNode(DataType x)
+{
+    SListNode* next = (SListNode*)malloc(sizeof(SListNode));
+    next->data = x;
+    next->next = NULL;
+    return next;
+}
+ 
+void PushBack(SListNode* & ppHead, DataType x)
+{
+    if (ppHead == NULL)
+    {
+        ppHead = BuyNode(x);
+    }
+    else
+    {
+        SListNode* tail = ppHead;
+        while (tail->next != NULL)
+        {
+            tail = tail->next;
+        }
+        tail->next = BuyNode(x);
+    }
+}
+ 
+void PrintSNodeList(SListNode* ppHead)
+{
+    while (ppHead)
+    {
+        printf("%d->", ppHead->data);
+        ppHead = ppHead->next;
+    }
+    printf("\n");
+}
+ 
+//在无头单链表的一个非头节点前插入一个节点
+void InsertFront(SListNode* & ppHead, SListNode* pos,DataType x)
+{
+    assert(ppHead);
+    SListNode* ppHeadName = ppHead;
+    while (ppHeadName != pos)
+    {
+        ppHeadName = ppHeadName->next;
+    }
+ 
+    if (ppHeadName == NULL)
+    {
+        return;
+    }
+ 
+    SListNode* cur = BuyNode(x);
+    cur->next = pos->next;
+    pos->next = cur;
+    cur->data = x;
+    DataType tmp = cur->data;
+    cur->data = pos->data;
+    pos->data = tmp;
+}
+ 
+void Test3()
+{
+    SListNode* List = NULL;
+    PushBack(List, 1);
+    PushBack(List, 2);
+    PushBack(List, 3);
+    PushBack(List, 4);
+    PushBack(List, 5);
+    PrintSNodeList(List);
+    InsertFront(List, List->next->next, 10);
+    PrintSNodeList(List);
+}
+ 
+int main()
+{
+    Test3();
+    system("pause");
+    return 0;
+ 
+}
+【单链表】删除一个无头单链表的非尾节点
+#include<stdio.h>
+#include<assert.h>
+#include<stdlib.h>
+ 
+typedef int DataType;
+ 
+typedef struct SListNode
+{
+    DataType data;
+    struct SListNode* next; 
+}SListNode;
+ 
+SListNode* BuyNode( DataType x)
+{
+    SListNode* next = (SListNode*)malloc(sizeof(SListNode));
+    next->data = x;
+    next->next = NULL;
+    return next;
+}
+ 
+void PushBack(SListNode* & ppHead, DataType x)
+{
+    if (ppHead == NULL)
+    {
+        ppHead = BuyNode(x);
+    }
+    else
+    {
+        SListNode* tail = ppHead;
+        while (tail->next != NULL)
+        {
+            tail = tail->next;
+        }
+        tail->next = BuyNode(x);
+    }
+}
+ 
+void PrintSNodeList(SListNode* ppHead)
+{
+    while (ppHead)
+    {
+        printf("%d->",ppHead->data);
+        ppHead = ppHead->next;
+    }
+    printf("\n");
+}
+//删除一个无头单链表的非尾节点
+void DelTail(SListNode* &ppHead, SListNode* pos)
+{
+    assert(ppHead);
+    SListNode* del = pos;
+    SListNode* cur = del->next;
+    SListNode* ppHeadName = ppHead;
+    while (ppHeadName != del)
+    {
+        ppHeadName = ppHeadName->next;
+    }
+ 
+    if (ppHeadName == NULL)
+    {
+        return;
+    }
+    del->data = cur->data;    
+    del->next = cur->next;
+    free(cur);
+}
+ 
+void Test2()
+{
+    SListNode* List = NULL;
+    PushBack(List, 1);
+    PushBack(List, 2);
+    PushBack(List, 3);
+    PushBack(List, 4);
+    PushBack(List, 5);
+    DelTail(List, List->next->next);
+    PrintSNodeList(List);
+     
+     
+}
+ 
+int main()
+{
+    Test2();
+    system("pause");
+    return 0;
+     
+}
+#include<stdio.h>
+#include<stdlib.h>
+int main()
+{
+    int(*p)[4] = (int (*)[4])malloc(12 * sizeof(int));//数组指针
+     
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            *(*(p + i) +j) = i * 4 + j + 1 ;
+        }
+    }
+     
+    for ( i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            printf("%d\t", *(*(p + i) + j));
+        }
+    }
+     
+    printf("\n");
+    system("pause");
+    return 0;
+}
+
+#include<stdio.h>
+#include<stdlib.h>
+int main()
+{
+    int i = 0;
+    int j = 0;
+    int **p = (int **)malloc(3 * sizeof(int));
+    for (i = 0; i < 3; i++)
+    {
+        *(p + i) = (int *)malloc(4 * sizeof(int));
+    }
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            p[i][j] = 4 * i + j + 1;
+        }
+    }
+     
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            printf("%d ", *(*(p + i) + j));
+        }
+         
+    }
+    system("pause");
+    return 0;
+}
+在一个数组中除两个数字只出现1次外，其它数字都出现了2次， 要求尽快找出这两个数字。
+要求：时间复杂度为O(N)，空间复杂度为O(1)。
+分析：
+如果将这道题简单化：
+    一个数组中只有一个数字出现一次，其他数字都是成对出现的，这时我们可以根据异或运算符的特性：A^B^A = B; 0 ^ A = A；我们可以将这个数组的全部元素依次做异或元算，结果就是那个只出现一次的数字。
+
+    如果这个数组中出现两个不同的数组，而其他数字均出现两次，假设这两个数组是x,y。那我们如果可以将x,y分离到两个数组。这时这道题就变成两个我们简化之后的版本中的数组了。这样问题就可以得到解决了。由于x，y肯定是不相等的，因此在二进制上必定有一位是不同的。根据这一位是0还是1可以将x，y分开到A组和B组。并且数组中其他元素也可以根据这个方法划分到两个数组中。这时将两个数组分别做异或运算，结果就是这两个数字。
+
+#include "iostream"
+using  namespace std;
+void printArray(int a[],int n)
+{
+    for(int i = 0; i < n; ++i)
+    {
+        cout << a[i] <<" ";
+    }
+    cout << endl;
+}
+void findNums(int a[], int n, int& num1, int& num2)
+{
+    int temp = 0;
+    int j;
+    for(int i = 0; i < n; ++i)
+    {
+        temp ^= a[i];
+    }
+    for(j = 0; j < sizeof(int) * 8; j++)
+    {
+        if(((temp >> j) & 1) == 1)
+        break;
+    }
+    num1 = 0;
+    num2 = 0;
+    for(int i = 0; i < n; ++i)
+    {
+        if(((a[i] >> j) & 1) == 0)
+        {
+            num1 ^= a[i];
+        }
+        else
+        {
+        num2 ^= a[i];
+        }
+    }
+}
+int main()
+{
+    const int MAXN = 10;
+    int arr[MAXN] = {1,2,3,4,1,2,3,4,0,5};
+    printArray(arr, MAXN);
+    int num1,num2;
+    findNums(arr, MAXN, num1, num2);
+    cout << num1 << " "<< num2 <<endl;
+    return 0;
+}
+
+// 百度面试题
+//数组中除两个数字外，其它数字都出现了次。要求尽可能快的找出这两个数字
+//By MoreWindows (http://blog.csdn.net/MoreWindows)
+#include <stdio.h>
+void FindTwoNotRepeatNumberInArray(int *a, int n, int *pN1, int *pN2)
+{
+    int i, j, temp;
+     
+    //计算这两个数的异或结果
+    temp = 0;
+    for (i = 0; i < n; i++)
+    temp ^= a[i];
+    // 找第一个为1的位
+    for (j = 0; j < sizeof(int) * 8; j++)
+        if (((temp >> j) & 1) == 1)
+            break;
+    // 第j位为1,说明这两个数字在第j位上是不相同的
+    // 由此分组即可
+    *pN1 = 0, *pN2 = 0;
+    for (i = 0; i < n; i++)
+    if (((a[i] >> j) & 1) == 0)
+        *pN1 ^= a[i];
+    else
+        *pN2 ^= a[i];
+}
+void PrintfArray(int a[], int n)
+{
+    for (int i = 0; i < n; i++)
+    printf("%d ", a[i]);
+    putchar('\n');
+}
+int main()
+{
+    printf("    白话经典算法系列之十二数组中不重复的个数字(百度面试题) \n");      
+    printf(" -- by MoreWindows( http://blog.csdn.net/MoreWindows ) --\n\n"); 
+    const int MAXN = 10;
+    //int a[MAXN] = {1, 2, 7, 5, 100,  100, 6, 1, 2, 5};
+    int a[MAXN] = {1, 2, 3, 4, 1,  2, 3, 4, 0, 5};
+    printf("数组为: \n");
+    PrintfArray(a, MAXN);
+    int nNotRepeatNumber1, nNotRepeatNumber2;
+    FindTwoNotRepeatNumberInArray(a, MAXN, &nNotRepeatNumber1, &nNotRepeatNumber2);
+    printf("两个不重复的数字分别为: %d %d\n", nNotRepeatNumber1, nNotRepeatNumber2);
+    return 0;
+}
