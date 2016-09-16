@@ -1,0 +1,711 @@
+  /*
+ http://blog.csdn.net/lcl_data/article/details/12117349
+按照目的来分，设计模式可以分为创建型模式、结构型模式和行为型模式。5+7+11=23
+
+【创建型模】式用来处理对象的创建过程；结构型模式用来处理类或者对象的组合；行为型模式用来对类或对象怎样交互和怎样分配职责进行描述。
+创建型模式用来处理对象的创建过程，主要包含以下5种设计模式： 
+1，工厂方法模式（Factory Method Pattern）的用意是定义一个创建产品对象的工厂接口，将实际创建工作推迟到子类中。
+经典例子:
+2，抽象工厂模式（Abstract Factory Pattern）的意图是提供一个创建一系列相关或者相互依赖的接口，而无需指定它们具体的类。
+经典例子:
+3，建造者模式（Builder Pattern）的意图是将一个复杂的构建与其表示相分离，使得同样的构建过程可以创建不同的表示。
+经典例子:  胖瘦人
+4，原型模式（Prototype Pattern）是用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。
+经典例子:
+5，单例模式（Singleton Pattern）是保证一个类仅有一个实例，并提供一个访问它的全局访问点。
+【结构型模式】用来处理类或者对象的组合，主要包含以下7种设计模式：
+6，适配器模式（Adapter Pattern）是将一个类的接口转换成客户希望的另外一个接口。使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。 
+经典例子:
+7，桥接模式（Bridge Pattern）是将抽象部分与实际部分分离，使它们都可以独立的变化。 
+经典例子:
+8，组合模式（Composite Pattern）是将对象组合成树形结构以表示“部分--整体”的层次结构。使得用户对单个对象和组合对象的使用具有一致性。
+经典例子:  书店与网上书店   汽车奇瑞
+9，装饰者模式（Decorator Pattern）动态的给一个对象添加一些额外的职责。就增加功能来说，此模式比生成子类更为灵活。 
+经典例子:
+10，外观模式（Facade Pattern）是为子系统中的一组接口提供一个一致的界面，此模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。
+经典例子:
+11，享元模式（Flyweight Pattern）是以共享的方式高效的支持大量的细粒度的对象。
+经典例子:
+12，代理模式（Proxy Pattern）就是为其他对象提供一种代理以控制对这个对象的访问。 
+经典例子:
+【行为型模式】用来对类或对象怎样交互和怎样分配职责进行描述，主要包含以下11种设计模式：
+13，责任链模式（Chain of Responsibility Pattern）每一个对象对其下家的引用而连接起来形成一条链。请求在这个链上传递，直到处理此请求，在不影响客户端的情况下动态处理。 
+经典例子: 多经理处理加薪
+14，命令模式（Command Pattern）是将一个请求封装为一个对象，从而使你可用不同的请求对客户端进行参数化；对请求排队或记录请求日志，以及支持可撤销的操作。 
+经典例子:  服务员下单
+15，解释器模式（Interpreter Pattern）就是描述了如何为简单的语言定义一个语法，如何在该语言中表示一个句子，以及如何解释这些句子。
+经典例子: 
+16，迭代器模式（Iterator Pattern）是提供了一种方法顺序来访问一个聚合对象中的各个元素，而又不需要暴露该对象的内部表示。 
+经典例子:
+17，中介者模式（Mediator Pattern）定义一个中介对象来封装系列对象之间的交互。终结者使各个对象不需要显示的相互调用 从而使其耦合性松散，而且可以独立的改变他们之间的交互。
+经典例子:
+18，备忘录模式（Memento Pattern）是在不破坏封装的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态。
+经典例子:  游戏备份
+19，观察者模式（Observer Pattern）定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。 
+经典例子: 终端解释器
+20，状态模式（State Pattern）就是允许一个对象在其内部状态改变时改变它的行为，使对象看起来似乎修改了它的类。
+经典例子:   工人白天工作晚上睡觉
+21，策略模式（Strategy Pattern）就是准备一组算法，并将每一个算法封装起来，使得它们可以互换。
+经典例子:    杀手与武器
+22，模板方法模式（Template Method Pattern）使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。 
+经典例子:   咖啡与茶
+23，访问者模式（Visitor Pattern）就是表示一个作用于某对象结构中的各元素的操作，它使你可以在不改变各元素的类的前提下定义作用于这些元素的新操作。 
+经典例子:     画线
+收录情况 
+创建型模式: 1     2     3      4   5
+结构型模式: 6     7     8     9   10   11   12 
+行为型模式: 11  12    13  14  15   16    17 18 19   20 21 22 23                        
+*/
+ #include <bits/stdc++.h>
+using namespace std; 
+ 
+class Builder  
+{
+public:
+	virtual void BuildHead() {}
+	virtual void BuildBody() {}
+	virtual void Buildleg(){} 
+};
+//构造瘦人
+class ThinBuilder : public Builder
+{
+public:
+	void BuildHead() { cout<<"build thin body"<<endl; }
+	void BuildBody() { cout<<"build thin head"<<endl; }
+	void Buildleg() { cout<<"build thin leg"<<endl; } 
+};
+//构造胖人
+class FatBuilder : public Builder
+{
+public:
+	void BuildHead() { cout<<"build fat body"<<endl; }
+	void BuildBody() { cout<<"build fat head"<<endl; }
+	void Buildleg() { cout<<"build fat leg"<<endl; } 
+};
+//构造的指挥官
+class Director  
+{
+private:
+	Builder *m_pBuilder;
+public:
+	Director(Builder *builder) { m_pBuilder = builder; }
+	void Create(){
+		m_pBuilder->BuildHead();
+		m_pBuilder->BuildBody();
+		m_pBuilder->Buildleg(); 
+	}
+};
+void test3()
+{
+	FatBuilder thin;
+	Director director(&thin);
+	director.Create();
+	cout << "http://blog.csdn.net/wuzhekai1985/article/details/6667467" << endl;
+}
+  
+class CPrototype
+{
+public:
+	CPrototype(){}
+	virtual ~CPrototype(){}
+
+	virtual CPrototype* Clone() = 0;
+};
+
+//实现
+class CConcretePrototype : public CPrototype
+{
+public:
+	CConcretePrototype():m_counter(0){}
+	virtual ~CConcretePrototype(){}
+
+	//拷贝构造函数
+	CConcretePrototype(const CConcretePrototype& rhs)
+	{
+		m_counter = rhs.m_counter;
+	}
+
+	//复制自身
+	virtual CPrototype* Clone()
+	{
+		//调用拷贝构造函数
+		return new CConcretePrototype(*this);
+	}
+
+private:
+	int m_counter;
+};
+
+void  test4()
+{
+	CPrototype* conProA = new CConcretePrototype();//生成对像
+	CPrototype* conProB = conProA->Clone();	//复制自身
+	delete conProA; conProA=NULL;
+	delete conProB; conProB=NULL;
+    cout << "http://blog.csdn.net/cabinriver/article/details/8895372/" << endl;
+    cout <<"more: http://blog.csdn.net/lcl_data/article/details/8764228" << endl;
+}
+ 
+ class Singleton
+{
+public: static Singleton *GetInstance(){return m_Instance;}
+     	int GetTest(){ 	return m_Test;}
+
+private: Singleton(){ m_Test = 10; }
+	static Singleton *m_Instance;
+	int m_Test;
+	class GC
+	{
+	public : ~GC()
+		{ 
+			if (m_Instance != NULL )
+			{
+				cout<< "Here is the test" <<endl;
+				delete m_Instance;
+				m_Instance = NULL ;
+			}
+		}
+	};
+	static GC gc;
+};
+Singleton *Singleton ::m_Instance = new Singleton();
+Singleton ::GC Singleton ::gc;
+  void  test5()
+  { 
+	Singleton *singletonObj = Singleton ::GetInstance();
+	cout<<singletonObj->GetTest()<<endl;
+    cout<<"http://www.jellythink.com/archives/82"<<endl;
+  }
+ /****************************************************************************/ 
+class Target  {   public:  virtual void Request(){};  };  
+class Adaptee  {   public:     void SpecificRequest()  {   cout<<"Called SpecificRequest()"<<endl;  }  };  
+class Adapter : public Adaptee, public Target  {  public: void Request(){this->SpecificRequest();}  };  
+void test6()     {     Target *t = new Adapter();  t->Request();  } 
+/****************************************************************************/ 
+class Implementor  {  public:   virtual void Show() {}  };  
+class Implementor1:public Implementor  {  public:  virtual void Show()  {   cout<<"Implementor1 is showing..."<<endl;  }  };  
+class Implementor2: public Implementor {  public:  virtual void Show()  {    cout<<"Implementor2 is showing.."<<endl;  }  };  
+class Abstractor  
+{  
+Implementor *_implementor;  
+public:  virtual void SetImplementor(Implementor* ot)  {  this->_implementor = ot;  }  
+         virtual void operate()  {  _implementor->Show(); }  
+};  
+  
+class RefinedAbstractor:public Abstractor  {  };  
+  
+void test7()  
+{  
+    Implementor1 * im1 = new Implementor1();    
+    Implementor2 * im2 = new Implementor2();  
+    RefinedAbstractor *re = new RefinedAbstractor();  
+    re->SetImplementor(im1);    re->operate();  
+    re->SetImplementor(im2);    re->operate();  
+} 
+/****************************************************************************/ 
+class Shop
+{  
+    public:       virtual void sell() = 0;  
+};  
+  
+class BookShop: public Shop 
+{  
+    public:       virtual void sell() {    cout << "sell book" << endl;  }  
+};  
+  
+  class NetShop: public Shop
+{  
+public: NetShop() {  m_shop = new BookShop();   }  
+        virtual void sell() {    discount();   m_shop->sell();   }  
+        void discount() {    cout << "discount ++" << endl;   }  
+private:    Shop* m_shop;  
+};  
+
+void test8() {      NetShop* netShop = new NetShop;  netShop->sell();   }
+  class Car  
+{  
+public:   virtual void CreatPartA() = 0;    virtual void CreatPartB() = 0;  
+};  
+  
+class DazhongCar :public Car  
+{  
+public:  
+    virtual void CreatPartA()   {   cout <<endl<<"大众："<<endl<< "大众A部分" << endl;  }  
+    virtual void CreatPartB()   {    cout << "大众B部分" << endl;   }  
+};  
+class Qirui :public Car  
+{  
+public:  
+    virtual void CreatPartA()  {    cout << endl << "奇瑞：" << endl << "奇瑞A部分" << endl;   }  
+    virtual void CreatPartB()   {   cout << "奇瑞车B部分" << endl;    }  
+};  
+class Direct //指挥者类  
+{  
+public:    Direct(Car*Temp)   {    C = Temp;   }  
+           void Create()    {    C->CreatPartA();   C->CreatPartB();    }  
+private:   Car*C;  
+};  
+  
+void test88( )  
+{  
+    Car*D = new DazhongCar;  
+    Car*Q = new Qirui;  
+    Direct *A = new Direct(D);  
+    Direct *B = new Direct(Q);  
+    A->Create();   B->Create();  
+}   
+class Parser  
+{  
+public:  
+	void Parse() { cout<<"语法分析"<<endl; }  
+};  
+ 
+class GenMachineCode  
+{  
+public:  
+	void GenCode() { cout<<"产生机器码"<<endl;}  
+};  
+
+//高层接口  Fecade
+class Compiler  
+{  
+public:  
+	void Run()   
+	{   
+		Parser parser;           	parser.Parse();  
+		GenMachineCode genMacCode;  genMacCode.GenCode(); 
+	}  
+};  
+
+void test10()  {   Compiler compiler;    compiler.Run();  }  
+ 
+#include<bits/stdc++.h>
+using namespace std;
+
+class Flyweight
+{
+private:
+    //内部状态
+    string intrinsic;
+protected:
+    //外部状态
+    const string extrainsic;
+public:
+    Flyweight(string _ex)
+        :extrainsic ( _ex)
+    {
+    }
+
+    //定义业务操作
+    virtual void operate(){}
+    string getIntrinsic()
+    {
+        return intrinsic;
+    }
+    void setIntrinsic(string _in)
+    {
+        intrinsic = _in;
+    }
+};
+
+class ConcreteFlyweight1 :public Flyweight
+{
+public:
+    ConcreteFlyweight1(string ex)
+        :Flyweight(ex)
+    {}
+
+    void operate()
+    {
+        //根据外部逻辑进行业务处理
+        cout << "1根据外部逻辑进行业务处理!" << endl;
+    }
+};
+class ConcreteFlyweight2 :public Flyweight
+{
+public:
+    ConcreteFlyweight2(string ex)
+        :Flyweight(ex)
+    {}
+
+    void operate()
+    {
+        //根据外部逻辑进行业务处理
+        cout << "2根据外部逻辑进行业务处理!" << endl;
+    }
+};
+class FlyweightFactory
+{
+private:
+    static map<string, Flyweight*> pool;
+public:
+    Flyweight* getFlyweight(string ex)
+    {
+         map<string, Flyweight*>::iterator it = pool.find(ex);
+        if (it == pool.end())
+        {
+            cout << "Creat Flyweight1" << endl;
+            pool[ex] = new ConcreteFlyweight1(ex);
+        }
+        return pool[ex];
+    }
+};
+
+
+ map<string, Flyweight*> FlyweightFactory::pool = map<string,Flyweight*>();
+ 
+ 
+void test11()
+{  //http://www.cnblogs.com/lang5230/archive/2016/04/09/5371284.html
+    FlyweightFactory ff;
+        Flyweight * bd = ff.getFlyweight("wz");
+        Flyweight * db= ff.getFlyweight("wz");
+       bd->operate();db->operate();
+         cout<<bd<<"======"<<db<<endl;
+}
+ class Subject{  
+public:  
+    virtual void SellBooks()=0;  
+};  
+  
+class RealBookShop : public Subject{  
+public:  
+    void  SellBooks(){  
+        cout<<"sell books!"<<endl;  
+    }  
+};  
+  
+class Taobao_proxy : public Subject{  
+public:  
+    Taobao_proxy(RealBookShop* realshop){  
+        m_real=realshop;  
+    }  
+    void  SellBooks(){  
+        Discount();  
+        m_real->SellBooks();  
+        Discount();  
+    }  
+    void Discount(){  
+        cout<<"11.11 discount"<<endl;  
+    }  
+private:  
+RealBookShop* m_real;  
+};  
+ 
+void test12(){  
+    RealBookShop* r=new RealBookShop;  
+    Taobao_proxy* p=new Taobao_proxy(r);  
+    p->SellBooks();  
+    //http://blog.csdn.net/yangqiang387393/article/details/51395888
+}  
+class Request   {   public:   int m_nNumber;   };     
+class Manager  
+{  
+public:  Manager(string temp) { name = temp; }  
+    void SetSuccessor(Manager* temp) { manager = temp; }  
+    virtual void GetRequest(Request* request) = 0;  
+protected: Manager* manager;   string name;  
+};  
+   
+class CommonManager : public Manager  
+{  
+public:   CommonManager(string strTemp) : Manager(strTemp) {}  
+    virtual void GetRequest(Request* request)
+    {
+    if (request->m_nNumber>=0 && request->m_nNumber<1000)  cout << name << " 处理了请求: " << request->m_nNumber << endl;  
+    else     manager->GetRequest(request);  
+    }
+};  
+class Majordomo : public Manager  
+{  
+public:    Majordomo(string strTemp) : Manager(strTemp) {}  
+    virtual void GetRequest(Request* request)
+    {  
+    if (request->m_nNumber <= 5000)  cout << name << " 处理了请求: " << request->m_nNumber << endl;  
+    else   manager->GetRequest(request);  
+    }  
+};  
+     
+class GeneralManager: public Manager    
+{    
+public:    
+    GeneralManager(string name):Manager(name) {}    
+    virtual void GetRequest(Request* request)  //总经理可以处理所有请求    
+    {         
+        cout << name << " 处理了请求: " << request->m_nNumber << endl;          
+    }    
+};  
+  
+void test13(){  
+  
+    Manager* common = new CommonManager("张经理");  
+    Manager* major = new Majordomo("李总监");  
+    GeneralManager* general  = new GeneralManager("赵总");  
+    common->SetSuccessor(major);  
+                        major->SetSuccessor(general);  
+    Request* rq = new Request();  
+    rq->m_nNumber = 999;  common->GetRequest(rq);  
+    rq->m_nNumber = 4999;    common->GetRequest(rq);  
+    rq->m_nNumber = 6999;   common->GetRequest(rq);  
+   
+}   
+  
+  
+/****************************************************************************/ 
+class RoastCook  
+{  
+public:  
+    void MakeMutton() { cout << "烤羊肉" << endl; }  
+    void MakeChickenWing() { cout << "烤鸡翅膀" << endl; }  
+};  
+   
+class Command  
+{  
+public:    Command(RoastCook* temp) { receiver = temp; }  
+           virtual void ExecuteCmd() = 0;  
+protected:  
+    RoastCook* receiver;  
+};   
+class MakeMuttonCmd : public Command  
+{  
+public:  
+    MakeMuttonCmd(RoastCook* temp) : Command(temp) {}  
+    virtual void ExecuteCmd() { receiver->MakeMutton(); }  
+};   
+class MakeChickenWingCmd : public Command  
+{  
+public:  
+    MakeChickenWingCmd(RoastCook* temp) : Command(temp) {}  
+    virtual void ExecuteCmd() { receiver->MakeChickenWing(); }  
+};  
+   
+class Waiter  
+{  
+public:  
+    void SetCmd(Command* temp){
+         m_commandList.push_back(temp);  
+    cout << "增加订单" << endl; 
+    }  
+    void Notify(){
+         vector<Command*>::iterator it;  
+    for (it=m_commandList.begin(); it!=m_commandList.end(); ++it)  
+      (*it)->ExecuteCmd();  
+    } 
+protected:  
+    vector<Command*> m_commandList;  
+};  
+void test14()  
+{    
+    RoastCook* cook = new RoastCook();  
+    Command* cmd1 = new MakeMuttonCmd(cook);  
+    Command* cmd2 = new MakeChickenWingCmd(cook);  
+    Waiter* girl = new Waiter();  
+    girl->SetCmd(cmd1);    girl->SetCmd(cmd2);  
+    girl->Notify();  
+} 
+/****************************************************************************/ 
+  class Memento 
+{
+private: string state; 
+public:  Memento(){}
+	     Memento(string s):state(s){};
+	string GetState(){return state;}
+};
+
+class game 
+{
+private:  string state; 
+public:
+	void SetState(string state) { 	this->state=state;}
+	Memento CreateMemento()     { return Memento(state);}
+	void SetMento(Memento mem)  {  this->state=mem.GetState(); }
+	void Show()                 { cout<<"当前状态为:"<<state<<endl; }
+};
+/*
+http://www.itnose.net/detail/6074926.html
+game  --> Memento --<>  CareTaker
+玩家       备份存根     备份操作        
+*/
+class CareTaker 
+{
+private: Memento memento; 
+public:  Memento GetMemento()          {  return memento; }
+	void SetMemento(Memento men)  {   this->memento=men; cout<<"当前状态信息已备份!"<<endl; }
+};
+
+void test18()
+{
+	game org;  
+	org.SetState("初始状态");       org.Show();
+	CareTaker ct;     ct.SetMemento(org.CreateMemento()); 
+	org.SetState("升级状态!");     org.Show(); 
+	org.SetMento(ct.GetMemento()); org.Show();
+} 
+ /****************************************************************************/  
+class Context    {  public: string input;    string output;  };  
+class AbstractExpression  
+{  
+public:  virtual void Interpret(Context* context) = 0;  
+};  
+class Expression : public AbstractExpression  
+{  
+public:   virtual void Interpret(Context* context) { cout << "终端解释器" << endl; }  
+};  
+class NonTerminalExpression : public AbstractExpression  
+{  
+public:  virtual void Interpret(Context* context) { cout << "非终端解释器" << endl; }  
+};  
+void test19( )  
+{  
+Context* context = new Context();  
+vector<AbstractExpression*> express;  
+  express.push_back(new Expression());  
+ express.push_back(new NonTerminalExpression());  
+express.push_back(new NonTerminalExpression());  
+vector<AbstractExpression*>::iterator it;  
+for (it=express.begin(); it!=express.end(); ++it) {  (*it)->Interpret(context);  }  
+}  
+  /****************************************************************************/  
+class Worker;   
+class State{ public: virtual void doing(Worker* w){} };
+class WorkingState: public State {  public:  void doing(Worker* worker); };
+class SleepingState: public State {  public: void doing(Worker* worker); };
+class OtherState : public State { public:    void doing(Worker* worker); };  
+class Worker
+{
+public: Worker() {   state = new WorkingState(); }
+    void setState(State* stat)     { state = stat; }
+   int getHour()              {   return hour;}
+    void setHour(int x)      {     cout << "time is "<<x; hour = x; }
+    void requestDoing()          {  state->doing(this); }
+private:
+    State* state;
+    int hour;
+}; 
+void WorkingState::doing(Worker* worker)
+{
+    if(worker->getHour() > 8 && worker->getHour()  < 16)  cout << ": WorkingState!" << endl;
+    else
+    {
+        worker->setState(new OtherState());   worker->requestDoing();
+    }
+}
+ 
+void SleepingState::doing(Worker* worker)
+{
+    if(worker->getHour()  >= 21 || worker->getHour()  < 5)  cout << ": SleepingState!" << endl;
+    else
+    {
+        worker->setState(new OtherState());   worker->requestDoing();
+    }
+}
+void OtherState::doing(Worker* worker)
+{
+    if((worker->getHour() >= 5 && worker->getHour() < 8) || (worker->getHour() >= 16 && worker->getHour() < 21))
+        cout << "others!" << endl;
+       
+    else if(worker->getHour() >= 21 || worker->getHour() < 5)
+          {worker->setState(new SleepingState());  worker->requestDoing();}
+    else  {worker->setState(new WorkingState());  worker->requestDoing();}
+} 
+void test20()
+{
+    Worker* pWorker = new Worker();
+    pWorker->setHour(12);   pWorker->requestDoing();
+    pWorker->setHour(24);  pWorker->requestDoing();
+}
+/****************************************************************************/ 
+class WeaponBehavior   {     public:  void virtual useWeapon() = 0;  };  
+class AK47:public WeaponBehavior  
+{  
+   public:   void useWeapon()   {   cout << "Use AK47 to shoot!" << endl;  }  
+};  
+class Knife:public WeaponBehavior  
+{  
+   public:   void useWeapon()   {    cout << "Use Knife to kill" << endl;   }  
+};  
+class Character  
+{  
+public: Character()                    {    weapon = 0;   }  
+    void setWeapon(WeaponBehavior *w)  {   this->weapon = w;   }  
+    void virtual fight() = 0;  
+protected:   WeaponBehavior *weapon;  
+};  
+class Killer:public Character  
+{  
+public: void fight()  
+    {   if ( this->weapon == NULL)  cout << "NO weapon! Please Set Weapon!" << endl;  
+        else      weapon->useWeapon();  
+    }  
+};  
+void test21() 
+{      
+    WeaponBehavior *ak47 = new AK47();  
+    WeaponBehavior *knife = new Knife();       
+    Character *kin = new Killer();        kin->fight();    
+    kin->setWeapon(ak47);    kin->fight();   
+    kin->setWeapon(knife);    kin->fight();  
+}  
+/****************************************************************************/ 
+template <typename T>
+class CaffeineBeverage   
+{
+public:
+	void PrepareRecipe()  
+	{
+		cout << "烧水" <<  endl;
+		static_cast<T *>(this)->Brew();       
+		 static_cast<T *>(this)->AddCondiments();
+	}
+};
+class Coffee : public CaffeineBeverage<Coffee>
+{
+public:
+	void Brew()          { cout << "冲泡咖啡" << endl;}
+	void AddCondiments() { cout << "加糖和牛奶" << endl;}
+};
+class Tea : public CaffeineBeverage<Tea>
+{
+public: void Brew()          	{ cout << "浸泡茶叶" << endl;}
+	    void AddCondiments() 	{ cout << "加柠檬" <<  endl;}
+};
+ void test22()
+{ 
+	Coffee c; c.PrepareRecipe(); 
+	 //Tea t; t.PrepareRecipe();
+}
+/****************************************************************************/ 
+//http://www.tuicool.com/articles/BB3yQz 
+class DrawAction { public: virtual void DrawLine() = 0; virtual void DrawPolygon() = 0; };
+class DrawWithTexture : public DrawAction
+{
+public: void DrawLine()		{cout << "绘制线"<< endl;} 
+  void DrawPolygon()	{cout << "绘制多边形"<< endl;} 
+};
+class DrawIn3DModel : public DrawAction
+{
+public: void DrawLine()			{cout << "绘制3D模式下的线"<< endl;} 
+  void DrawPolygon()	{cout << "绘制3D模式下的多边形"<< endl;} 
+};
+class Element {  public:  virtual void Draw(DrawAction *visitor) = 0; };
+class Line : public Element
+{
+public: void Draw(DrawAction *visitor)  { visitor->DrawLine(); }
+};
+class Polygon : public Element
+{
+public:  void Draw(DrawAction *visitor) { visitor->DrawPolygon(); }
+};
+void test23()
+{
+  Element *pLine = new Line;   //线  
+  Element *pPoly = new Polygon;//形
+  DrawAction *p3DM  = new DrawIn3DModel; 
+   pLine->Draw(p3DM); pPoly->Draw(p3DM);
+}
+/****************************************************************************/ 
+int main()
+{
+    cout<<"http://www.anycodes.cn/zh/"<<endl;
+    return 0;
+}
